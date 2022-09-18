@@ -2,44 +2,45 @@ var mongoose = require('mongoose')
 var Schema = mongoose.Schema
 var bcrypt = require('bcrypt')
 
-// var stockSchema = new Schema({
-//     seller: {
-//         type: String
-//     },
-//     date: {
-//         type: String
-//     },
-//     size: {
-//         type: String
-//     },
-//     price: {
-//         type: String
-//     },
-//     isSold: {
-//         type: Boolean
-//     },
-//     priceSold: {
-//         type: String
-//     }
-// })
+var stockSchema = new Schema({
+    seller: {
+        type: String
+    },
+    date: {
+        type: String
+    },
+    size: {
+        type: String
+    },
+    price: {
+        type: String
+    },
+    isSold: {
+        type: Boolean
+    },
+    priceSold: {
+        type: String
+    },
+    
+})
 
-// var sneakerSchema = new Schema({
-//     id: {
-//         type: String
-//     },
-//     name: {
-//         type: String
-//     },
-//     notes: {
-//         type: String
-//     },
-//     img: {
-//         type: String
-//     },
-//     available: [
-//         stockSchema
-//     ]
-// })
+var sneakerSchema = new Schema({
+    id: {
+        type: String
+    },
+    name: {
+        type: String
+    },
+    notes: {
+        type: String
+    },
+    img: {
+        type: String
+    },
+    available: [
+        stockSchema,
+    ]
+})
 // user schema objects
 var userSchema = new Schema({
     name: {
@@ -99,12 +100,17 @@ userSchema.methods.comparePassword = function(passw, cb){
     })
 }
 
+userSchema.methods.addNewSneakers = function(newSneaker){
+    var user = this
+    user.data.push(newSneaker)
+}
+
 const user = mongoose.model('User', userSchema)
-// const sneaker = mongoose.model('Sneaker', sneakerSchema)
-// const stock = mongoose.model('Stock', stockSchema)
+const sneaker = mongoose.model('Sneaker', sneakerSchema)
+const stock = mongoose.model('Stock', stockSchema)
 
 module.exports = {
     User: user,
-    // Sneaker: sneaker,
-    // Stock: stock
+    Sneaker: sneaker,
+    Stock: stock
 }
