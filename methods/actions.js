@@ -146,6 +146,90 @@ var functions = {
             }
         )
     },
+    addNewStock: function(req,res){
+        if(!req.body.userID || !req.body.userID.length){
+            return res.json({success: false, msg: "Please include userID"})
+        }
+
+        if(!req.body.sneakerID || !req.body.sneakerID.length){
+            return res.json({success: false, msg: "Please include sneaker info!!!"})
+        }
+
+        if(!req.body.newStockInfo || !req.body.newStockInfo.length){
+            return res.json({success: false, msg: "Please include stock info!!!"})
+        }
+
+        const userID = req.body.userID
+        const sneakerID = req.body.sneakerID
+        const newStockInfo = JSON.parse(req.body.newStockInfo)
+        // create new sneaker info
+        let newStockData = Stock({
+            seller: newStockInfo.seller,
+            date: newStockInfo.date,
+            size: newStockInfo.size,
+            price: newStockInfo.price,
+            isSold: newStockInfo.isSold,
+            priceSold: newStockInfo.priceSold
+        })
+        
+        User.findOneAndUpdate(
+            { _id: userID, 
+              data: { $elemMatch: { _id: mongoose.Types.ObjectId(sneakerID)}} 
+            },
+            // $ operator in the line below represent for the result that
+            // returned from the querry
+            { $push: { "data.$.available": newStockData}},
+            function(err,result){
+                if (err){
+                    console.log(err);
+                    res.send({success: false, msg: err})
+                }
+                else{
+                    // console.log(result)
+                    res.send({success: true, msg: result})
+                }
+            }
+        )
+    },
+    removeStock: function(req, res){
+        if(!req.body.userID || !req.body.userID.length){
+            return res.json({success: false, msg: "Please include userID"})
+        }
+
+        if(!req.body.sneakerID || !req.body.sneakerID.length){
+            return res.json({success: false, msg: "Please include sneaker info!!!"})
+        }
+
+        if(!req.body.stockID || !req.body.stockID.length){
+            return res.json({success: false, msg: "Please include stock id info!"})
+        }
+
+        const userID = req.body.userID
+        const sneakerID = req.body.sneakerID
+        const stockID = req.body.stockID
+
+        // User.findOneAndUpdate(
+        //     { _id: userID, 
+        //       data: { $elemMatch: { _id: mongoose.Types.ObjectId(sneakerID)}} 
+        //     },
+        //     // $ operator in the line below represent for the result that
+        //     // returned from the querry
+        //     { $pull: { "data.$.available._id": stockID}},
+        //     {
+        //         arrayFilters: [_id]
+        //     },
+        //     function(err,result){
+        //         if (err){
+        //             console.log(err);
+        //             res.send({success: false, msg: err})
+        //         }
+        //         else{
+        //             // console.log(result)
+        //             res.send({success: true, msg: result})
+        //         }
+        //     }
+        // )
+    },
     // middleware to authenticate
     authenticateToken: function(req, res, next){
         const authHeader = req.headers['authorization']

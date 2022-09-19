@@ -30,6 +30,14 @@ router.post('/updatedata/addsneaker', actions.addNewSneaker)
 //@Route POST /updatedata/removesneaker
 router.post('/updatedata/removesneaker', actions.removeSneaker)
 
+//@desc add new stock from a sneaker list of user document
+//@Route POST /updatedata/addstock
+router.post('/updatedata/addstock', actions.addNewStock)
+
+//@desc remove stock from a sneaker list of user document
+//@Route POST /updatedata/remove
+router.post('/updatedata/removestock', actions.removeStock)
+
 //@desc get info of the authenticated user
 //@route GET /getdata/info
 router.get('/getdata/info', actions.getInfo)
