@@ -1,3 +1,5 @@
 working on add data
 
 wroking on add and remove stock info
+
+working on remove stock
