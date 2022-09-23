@@ -21,7 +21,15 @@ router.post('/adduser', actions.addNew)
 
 //@desc Authenticate a user
 //@Route POST /authenticate
-// router.post('/authenticate', actions.authenticate)
+router.post('/authenticate', authenticate.authenticate)
+
+//@desc Referesh token of user when access token expired
+//@Route POST /refreshToken
+router.post('/token', authenticate.refreshToken)
+
+//@desc delete refresh token of user when log out
+//@Route DELETE /logout
+router.delete('/logout', authenticate.logOut)
 
 //@desc add a new sneaker to user document
 //@Route POST /updatedata/addsneaker
