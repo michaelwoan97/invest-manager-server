@@ -1,10 +1,11 @@
 const express = require('express')
 const actions = require('../methods/actions')
+const authenticate = require('../controllers/authenticate')
 const router = express.Router()
 
 // middleware
-router.use("/getdata/", actions.authenticateToken)
-router.use("/updatedata/", actions.authenticateToken)
+router.use("/getdata/", authenticate.authenticateToken)
+router.use("/updatedata/", authenticate.authenticateToken)
 
 router.get('/', (req, res) => {
     res.send('Hello World')
@@ -20,7 +21,7 @@ router.post('/adduser', actions.addNew)
 
 //@desc Authenticate a user
 //@Route POST /authenticate
-router.post('/authenticate', actions.authenticate)
+// router.post('/authenticate', actions.authenticate)
 
 //@desc add a new sneaker to user document
 //@Route POST /updatedata/addsneaker

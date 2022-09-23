@@ -1,10 +1,6 @@
 require('dotenv').config()
 const mongoose =  require("mongoose")
 var {User, Sneaker, Stock}= require('../models/user')
-var jwt = require('jwt-simple')
-const jsonwt = require('jsonwebtoken')
-var config = require('../config/dbconfig')
-const { isObjectIdOrHexString } = require('mongoose')
 
 // all function to perform when request come to server
 var functions = {
@@ -33,29 +29,6 @@ var functions = {
                 }
             })
         }
-    },
-    authenticate: function(req,res){
-        User.findOne({
-            name: req.body.name
-        }, function(err, user){
-            if(err) throw err
-            if(!user){
-                res.status(403).send({success: false, msg:'Authentication Failed, User not found'})
-            }
-            else 
-            {
-                user.comparePassword(req.body.password, function(err, isMatch){
-                    if(isMatch && !err){
-                        const token = jsonwt.sign(user.toJSON(), process.env.ACCESS_TOKEN_SECRET)
-                        res.json({success: true, token: token})
-                    }
-                    else 
-                    {
-                        return res.status(403).send({success: false, msg: 'Authentication failed, wrong password'})
-                    }
-                })
-            }
-        })
     },
     getInfo: function(req, res){
         return res.json({success: true, msg: req.user})
@@ -246,7 +219,6 @@ var functions = {
         const userID = req.body.userID
         const sneakerID = req.body.sneakerID
         
-
         User.findOneAndUpdate(
             { _id: userID, 
               data: { $elemMatch: { _id: sneakerID}} 
@@ -272,19 +244,6 @@ var functions = {
         )
 
     },
-    // middleware to authenticate
-    authenticateToken: function(req, res, next){
-        const authHeader = req.headers['authorization']
-        const token = authHeader && authHeader.split(' ')[1]
-
-        if(token == null) return res.sendStatus(401)
-
-        jsonwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
-            if(err) return res.sendStatus(403)
-            req.user = user
-            next()
-        })
-    }
 }
 
 module.exports = functions

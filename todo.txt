@@ -8,3 +8,7 @@ working on remove stock
 need more learning
 arregrate update
 find element (need improve)
+how to store refresh token
+
+how veryify token works
+how delete it
