@@ -6,7 +6,7 @@ var {User, Sneaker, Stock}= require('../models/user')
 var functions = {
     addNew: function(req, res){
         if((!req.body.name) || (!req.body.password)){
-            res.json({success: false, msg: 'Enter All Fields!!!'})
+            functions.sendBackResponse(false,'Enter All Fields!!!')
         }
         else 
         {
@@ -21,29 +21,29 @@ var functions = {
             
             newUser.save(function(err, newUser){
                 if(err){
-                    res.json({success: false, msg: 'Failed to save!!!'})
+                    functions.sendBackResponse(false,'Failed to save!!!')
                 } 
                 else 
                 {
-                    res.json({success: true, msg: 'Successfully saved'})
+                    functions.sendBackResponse(true,'Successfully saved')
                 }
             })
         }
     },
     getInfo: function(req, res){
-        return res.json({success: true, msg: req.user})
+        return functions.sendBackResponse(true,req.user)
     },
     getSneakerData: function(req,res){
-        return res.json({success: true, msg: req.user.data})
+        return functions.sendBackResponse(true,req.user.data)
     },
     // add new sneaker to the list of user
     addNewSneaker: function(req, res){
         if(!req.body.userID || !req.body.userID.length){
-            return res.json({success: false, msg: "Please include userID"})
+            return functions.sendBackResponse(false,"Please include userID")
         }
 
         if(!req.body.newSneaker || !req.body.newSneaker.length){
-            return res.json({success: false, msg: "Please enter new sneaker info!!!"})
+            return functions.sendBackResponse(false,"Please enter new sneaker info!!!")
         }
         
         const userID = req.body.userID
@@ -80,11 +80,11 @@ var functions = {
             function(err, result){
                 if (err){
                     console.log(err);
-                    res.send({success: false, msg: err})
+                    functions.sendBackResponse(false,err)
                 }
                 else{
                     console.log(result)
-                    res.send({success: true, msg: result})
+                    functions.sendBackResponse(true,result)
                 }
             }
         )
@@ -92,11 +92,11 @@ var functions = {
     // remove sneaker in the list
     removeSneaker: function(req, res){
         if(!req.body.userID || !req.body.userID.length){
-            return res.json({success: false, msg: "Please include userID"})
+            return functions.sendBackResponse(false,"Please include userID")
         }
 
         if(!req.body.sneakerID || !req.body.sneakerID.length){
-            return res.json({success: false, msg: "Please include sneaker info!!!"})
+            return  functions.sendBackResponse(false,"Please include sneaker info!!!")
         }
 
         const userID = req.body.userID
@@ -110,26 +110,26 @@ var functions = {
             function(err, result){
                 if (err){
                     console.log(err);
-                    res.send({success: false, msg: err})
+                    functions.sendBackResponse(false,err)
                 }
                 else{
                     console.log(result)
-                    res.send({success: true, msg: result})
+                    functions.sendBackResponse(true,result)
                 }
             }
         )
     },
     addNewStock: function(req,res){
         if(!req.body.userID || !req.body.userID.length){
-            return res.json({success: false, msg: "Please include userID"})
+            return functions.sendBackResponse(false,"Please include userID")
         }
 
         if(!req.body.sneakerID || !req.body.sneakerID.length){
-            return res.json({success: false, msg: "Please include sneaker info!!!"})
+            return functions.sendBackResponse(false,"Please include sneaker info!!!")
         }
 
         if(!req.body.newStockInfo || !req.body.newStockInfo.length){
-            return res.json({success: false, msg: "Please include stock info!!!"})
+            return functions.sendBackResponse(false,"Please include stock info!!!")
         }
 
         const userID = req.body.userID
@@ -155,26 +155,26 @@ var functions = {
             function(err,result){
                 if (err){
                     console.log(err);
-                    res.send({success: false, msg: err})
+                    functions.sendBackResponse(false,err)
                 }
                 else{
                     // console.log(result)
-                    res.send({success: true, msg: result})
+                    functions.sendBackResponse(true,result)
                 }
             }
         )
     },
     removeStock: function(req, res){
         if(!req.body.userID || !req.body.userID.length){
-            return res.json({success: false, msg: "Please include userID"})
+            return functions.sendBackResponse(false,"Please include userID")
         }
 
         if(!req.body.sneakerID || !req.body.sneakerID.length){
-            return res.json({success: false, msg: "Please include sneaker info!!!"})
+            return functions.sendBackResponse(false,"Please include sneaker info!!!")
         }
 
         if(!req.body.stockID || !req.body.stockID.length){
-            return res.json({success: false, msg: "Please include stock id info!"})
+            return functions.sendBackResponse(false,"Please include stock id info!")
         }
 
         const userID = req.body.userID
@@ -193,26 +193,26 @@ var functions = {
             function(err,result){
                 if (err){
                     console.log(err);
-                    res.send({success: false, msg: err})
+                    functions.sendBackResponse(false,err)
                 }
                 else{
                     // console.log(result)
-                    res.send({success: true, msg: result})
+                    functions.sendBackResponse(true,result)
                 }
             }
         )
     },
     updateSneaker: function(req,res) {
         if(!req.body.userID || !req.body.userID.length){
-            return res.json({success: false, msg: "Please include userID"})
+            return functions.sendBackResponse(false,"Please include userID")
         }
 
         if(!req.body.sneakerID || !req.body.sneakerID.length){
-            return res.json({success: false, msg: "Please include sneakerID!!!"})
+            return functions.sendBackResponse(false,"Please include sneakerID!!!")
         }
 
         if(!req.body.updateStockInfo || !req.body.updateStockInfo.length){
-            return res.json({success: false, msg: "Please include stock info to update!"})
+            return functions.sendBackResponse(false,"Please include stock info to update!")
         }
 
         const sneaker = JSON.parse(req.body.updateStockInfo)
@@ -234,16 +234,20 @@ var functions = {
             function(err, result){
                 if (err){
                     console.log(err);
-                    res.send({success: false, msg: err})
+                    functions.sendBackResponse(false,err)
                 }
                 else{
                     // console.log(result)
-                    res.send({success: true, msg: result})
+                    functions.sendBackResponse(true,result)
                 }
             }
         )
 
     },
+    sendBackResponse: function(bool,msg){
+        res.setHeader('Content-Type', 'application/json')
+        res.send(JSON.stringify({success: true, msg: result}))
+    }
 }
 
 module.exports = functions

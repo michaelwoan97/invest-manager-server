@@ -1,6 +1,7 @@
 require('dotenv').config()
 const jsonwt = require('jsonwebtoken')
 var config = require('../config/dbconfig')
+const { sendBackResponse } = require('../methods/actions')
 var {User, Sneaker, Stock}= require('../models/user')
 
 let refreshTokens = [] // store refresh token temp
@@ -11,7 +12,8 @@ authenticate= function(req,res) {
     }, function(err, user){
         if(err) throw err
         if(!user){
-            res.status(403).send({success: false, msg:'Authentication Failed, User not found'})
+            res.status(403)
+            sendBackResponse(false,'Authentication Failed, User not found')
         }
         else 
         {
@@ -20,11 +22,13 @@ authenticate= function(req,res) {
                     const token = generateAccessToken(user.toJSON())
                     const refreshToken = jsonwt.sign(user.toJSON(), process.env.REFRESH_TOKEN_SECRET)
                     refreshTokens.push(refreshToken)
-                    res.json({success: true, token: token, refreshToken: refreshToken})
+                    res.setHeader('Content-Type', 'application/json')
+                    res.json(JSON.stringify({success: true, token: token, refreshToken: refreshToken}))
                 }
                 else 
                 {
-                    return res.status(403).send({success: false, msg: 'Authentication failed, wrong password'})
+                    res.status(403)
+                    return sendBackResponse(false,'Authentication failed, wrong password')
                 }
             })
         }
@@ -43,13 +47,13 @@ refreshToken = function(req, res){
     jsonwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, user) =>{
         if(err) return res.send({success: false, msg: "Cant verify the user!!!"})
         const accessToken = generateAccessToken({name: user.name})
-        res.send({success: true, msg: accessToken})
+        sendBackResponse(true,accessToken)
     })
 }
 
 logOut = function(req,res) {
     refreshTokens = refreshTokens.filter(token => token !== req.body.token)
-    res.send({success: true, msg: "successfully loged out!!!"})
+    sendBackResponse(true,"successfully loged out!!!")
 }
 
 authenticateToken = function(req, res, next){
@@ -63,6 +67,11 @@ authenticateToken = function(req, res, next){
         req.user = user
         next()
     })
+}
+
+sendBackResponse= function(bool,msg){
+    res.setHeader('Content-Type', 'application/json')
+    res.send(JSON.stringify({success: true, msg: result}))
 }
 
 module.exports = {
