@@ -246,7 +246,7 @@ var functions = {
     },
     sendBackResponse: function(bool,msg){
         res.setHeader('Content-Type', 'application/json')
-        res.send(JSON.stringify({success: true, msg: result}))
+        res.send(JSON.stringify({success: bool, msg: msg}))
     }
 }
 

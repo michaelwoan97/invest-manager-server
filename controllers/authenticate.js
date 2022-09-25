@@ -69,10 +69,6 @@ authenticateToken = function(req, res, next){
     })
 }
 
-sendBackResponse= function(bool,msg){
-    res.setHeader('Content-Type', 'application/json')
-    res.send(JSON.stringify({success: true, msg: result}))
-}
 
 module.exports = {
     authenticate,
