@@ -13,7 +13,7 @@ authenticate= function(req,res) {
         if(err) throw err
         if(!user){
             res.status(403)
-            sendBackResponse(false,'Authentication Failed, User not found')
+            sendBackResponse(res,false,'Authentication Failed, User not found')
         }
         else 
         {
@@ -28,7 +28,7 @@ authenticate= function(req,res) {
                 else 
                 {
                     res.status(403)
-                    return sendBackResponse(false,'Authentication failed, wrong password')
+                    return sendBackResponse(res,false,'Authentication failed, wrong password')
                 }
             })
         }
@@ -47,13 +47,13 @@ refreshToken = function(req, res){
     jsonwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, user) =>{
         if(err) return res.send({success: false, msg: "Cant verify the user!!!"})
         const accessToken = generateAccessToken({name: user.name})
-        sendBackResponse(true,accessToken)
+        sendBackResponse(res,true,accessToken)
     })
 }
 
 logOut = function(req,res) {
     refreshTokens = refreshTokens.filter(token => token !== req.body.token)
-    sendBackResponse(true,"successfully loged out!!!")
+    sendBackResponse(res,true,"successfully loged out!!!")
 }
 
 authenticateToken = function(req, res, next){
