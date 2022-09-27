@@ -105,7 +105,7 @@ var functions = {
         User.findByIdAndUpdate(
             userID,
             {$pull: {
-                data: { _id: mongoose.Types.ObjectId(sneakerID)}
+                data: { _id: sneakerID}
             }},
             function(err, result){
                 if (err){
