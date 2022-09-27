@@ -105,7 +105,7 @@ var functions = {
         User.findByIdAndUpdate(
             userID,
             {$pull: {
-                data: { _id: sneakerID}
+                data: { id: sneakerID}
             }},
             function(err, result){
                 if (err){
