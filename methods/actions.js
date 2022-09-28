@@ -221,7 +221,7 @@ var functions = {
         
         User.findOneAndUpdate(
             { _id: userID, 
-              data: { $elemMatch: { _id: sneakerID}} 
+              data: { $elemMatch: { id: sneakerID}} 
             },
             {
                 $set: { 
