@@ -36,7 +36,7 @@ authenticate= function(req,res) {
 }
 
 generateAccessToken = function(user){
-    return jsonwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {expiresIn: "10m"})
+    return jsonwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {expiresIn: "30s"})
 }
 
 
