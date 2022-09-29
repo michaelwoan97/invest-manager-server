@@ -42,6 +42,7 @@ generateAccessToken = function(user){
 
 refreshToken = function(req, res){
     const refreshToken = req.body.token
+    console.log(refreshToken)
     if(refreshToken == null) return res.send({success: false, msg: "Pls include the token"})
     if(!refreshTokens.includes(refreshToken)) return res.send({success: false, msg: "Token is not existed!!!"})
     jsonwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, user) =>{
