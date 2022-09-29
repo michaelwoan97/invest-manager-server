@@ -34,7 +34,6 @@ var functions = {
         return functions.sendBackResponse(res,true,req.user)
     },
     getSneakerData: function(req,res){
-        console.log(req.body)
         return functions.sendBackResponse(res,true,req.user.data)
     },
     // add new sneaker to the list of user
@@ -246,6 +245,7 @@ var functions = {
 
     },
     sendBackResponse: function(res,status,data){
+        console.log(data)
         res.setHeader('Content-Type', 'application/json')
         res.json(JSON.stringify({success: status, msg: data}))
     }
