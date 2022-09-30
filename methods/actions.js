@@ -32,9 +32,14 @@ var functions = {
     },
     getInfo: function(req, res){
         return functions.sendBackResponse(res,true,req.user)
+        // res.setHeader('Content-Type', 'application/json')
+        // res.json({success: true, msg: req.user.data})
     },
     getSneakerData: function(req,res){
         return functions.sendBackResponse(res,true,req.user.data)
+        // res.setHeader('Content-Type', 'application/json')
+        // console.log({success: true, msg: req.user})
+        // res.json({success: true, msg: req.user.data})
     },
     // add new sneaker to the list of user
     addNewSneaker: function(req, res){
@@ -237,7 +242,7 @@ var functions = {
                     functions.sendBackResponse(res,false,err)
                 }
                 else{
-                    // console.log(result)
+                    console.log(result)
                     functions.sendBackResponse(res,true,result)
                 }
             }
