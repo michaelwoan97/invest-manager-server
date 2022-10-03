@@ -2,6 +2,7 @@ require('dotenv').config()
 const jsonwt = require('jsonwebtoken')
 var config = require('../config/dbconfig')
 const { sendBackResponse } = require('../methods/actions')
+const RefreshTokenModel = require("../models/RefreshTokenModel")
 var {User, Sneaker, Stock}= require('../models/user')
 
 let refreshTokens = [] // store refresh token temp
@@ -25,12 +26,25 @@ authenticate= function(req,res) {
                     console.log(user)
                     const token = generateAccessToken(user.toJSON())
                     const refreshToken = jsonwt.sign(user.toJSON(), process.env.REFRESH_TOKEN_SECRET, {expiresIn: "1d"})
-                    refreshTokens.push(refreshToken)
                     // console.log(token)
                     // console.log(refreshToken)
-        
+
+                    // add refresh token to database
+                    const newRefreshToken = new RefreshTokenModel({
+                        token: refreshToken,
+                        user: user._id
+                    })
+                    
+                    RefreshTokenModel.findOneAndUpdate({user: user._id},{token: refreshToken}, {upsert: true}, function(err,result){
+                        if(err){ // not existed
+                            console.log(err)  
+                            return sendBackResponse(res,false,err.message)
+                        }
+                    })
+                    
+                    
                     res.setHeader('Content-Type', 'application/json')
-                    res.json(JSON.stringify({success: true, token: token, refreshToken: refreshToken}))
+                    res.json(JSON.stringify({success: true, token: token, refreshToken: refreshToken, userID: user._id}))
                 }
                 else 
                 {
@@ -43,28 +57,52 @@ authenticate= function(req,res) {
 }
 
 generateAccessToken = function(user){
-    return jsonwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {expiresIn: "20s"})
+    return jsonwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {expiresIn: "10s"})
 }
 
 
 refreshToken = function(req, res){
-    const refreshToken = req.body.token
-    // console.log(refreshToken)
-    if(refreshToken == null) return res.send({success: false, msg: "Pls include the token"})
-    if(!refreshTokens.includes(refreshToken)) return res.send({success: false, msg: "Token is not existed!!!"})
-    jsonwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, user) =>{
-        if(err) return res.send({success: false, msg: "Cant verify the user!!!"})
-        console.log(user);
-        const accessToken = generateAccessToken({name: user.name, data: user.data})
-        sendBackResponse(res,true,accessToken)
-        // console.log(accessToken);
-        // res.json({success: true, msg: accessToken})
+    if(!req.body.userID || !req.body.userID.length){
+        return sendBackResponse(res,false,"Please include userID")
+    }
+
+    const userID = req.body.userID
+    RefreshTokenModel.findOne({user: userID}, function(err,result){
+        if (err){
+            console.log(err);
+            sendBackResponse(res,false,err.message)
+        }
+        else{
+            const refreshToken = result.token
+            console.log(refreshToken)
+            jsonwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, user) =>{
+                if(err) return res.send({success: false, msg: "Cant verify the user!!!"})
+                console.log(user);
+                const accessToken = generateAccessToken({name: user.name, data: user.data})
+                sendBackResponse(res,true,accessToken)
+                // console.log(accessToken);
+                // res.json({success: true, msg: accessToken})
+            })
+        }
     })
+
+    
+    
 }
 
 logOut = function(req,res) {
-    refreshTokens = refreshTokens.filter(token => token !== req.body.token)
-    sendBackResponse(res,true,"successfully loged out!!!")
+    if(!req.body.userID || !req.body.userID.length){
+        return sendBackResponse(res,false,"Please include userID")
+    }
+
+    RefreshTokenModel.findOneAndDelete({user: req.body.userID}, function(err, result) {
+        if(err){
+            return sendBackResponse(res,false,'Failed to delete refresh token!!!')
+        } else {
+            sendBackResponse(res,true,"successfully loged out!!!")
+        }
+    })
+    
 }
 
 authenticateToken = function(req, res, next){
