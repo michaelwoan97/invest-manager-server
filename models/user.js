@@ -90,6 +90,7 @@ userSchema.pre('save', function(next) {
         })
         
     }
+    next()
 })
 
 // Compare the password

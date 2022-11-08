@@ -1,7 +1,11 @@
 require('dotenv').config()
 const mongoose =  require("mongoose")
+const fs = require('fs')
 var {User, Sneaker, Stock}= require('../models/user')
+const path = require('path')
 
+const IMAGEDIR = "/../users-sneaker-images/"
+const IMAGENAME = "sneaker-image"
 // all function to perform when request come to server
 var functions = {
     addNew: function(req, res){
@@ -18,7 +22,7 @@ var functions = {
                 data:  sneakerData
             })
             
-            
+
             newUser.save(function(err, newUser){
                 if(err){
                     functions.sendBackResponse(res,false,'Failed to save!!!')
@@ -79,20 +83,85 @@ var functions = {
             available: arrNewStockData
         })
 
-        User.findOneAndUpdate(
-            {_id: userID},
-            {$push: {data: newSneaker}},
-            function(err, result){
-                if (err){
-                    console.log(err);
-                    functions.sendBackResponse(res,false,err)
+        
+
+        // User.findOneAndUpdate(
+        //     {_id: userID},
+        //     {$push: {data: newSneaker}},
+        //     function(err, result){
+        //         if (err){
+        //             console.log(err);
+        //             functions.sendBackResponse(res,false,err)
+        //         }
+        //         else{
+        //             console.log(result)
+        //             functions.sendBackResponse(res,true,result)
+        //         }
+        //     }
+        // )
+
+        User.findById(userID).then(function (user) {
+            // check whether the folder for storing sneaker image of user exist
+            let usersImageDir = path.join(__dirname+IMAGEDIR)
+            let imgUserDir = path.join(usersImageDir+user.name+"/")
+            // if(!fs.existsSync(imgUserDir)){
+            //     fs.mkdirSync(imgUserDir, { recursive: true })
+            // }
+            fs.mkdir(imgUserDir, (err) => {
+                if(err){
+                    if(err.code != 'EEXIST'){
+                        console.log(err);
+                        return functions.sendBackResponse(res,false,err)
+                    }
                 }
-                else{
-                    console.log(result)
-                    functions.sendBackResponse(res,true,result)
-                }
-            }
-        )
+
+                // create seperate dir for storing image under users's sneaker image folder
+                let sneakerImgDir = path.join(imgUserDir+newSneaker._id+"/")
+                fs.mkdir(sneakerImgDir, (err) => {
+                    if(err){
+                        if(err.code != 'EEXIST'){
+                            console.log(err);
+                            return functions.sendBackResponse(res,false,err)
+                        }
+                    }
+
+                    let sneakerImgFile = path.join(sneakerImgDir+IMAGENAME+".jpg")
+                    let image = newSneaker.img
+                    let bitmap = Buffer.from(image, 'base64')
+                    fs.writeFile(sneakerImgFile, bitmap, function(err){
+                        if(err) {
+                            console.log(err);
+                            return functions.sendBackResponse(res,false,err)
+                        }
+                        newSneaker.img = sneakerImgFile
+                        user.data.push(newSneaker)
+                        user.save().then(result => {
+                            console.log(result)
+                            return functions.sendBackResponse(res,true,result)
+                        })
+                        .catch(err => {
+                            console.log(err);
+                            return functions.sendBackResponse(res,false,err)
+                        })
+                        // await user.save(function(err, result) {
+                        //     if(err){
+                        //         console.log(err);
+                        //         return functions.sendBackResponse(res,false,err)
+                        //     } else {
+                        //         console.log(result)
+                        //         return functions.sendBackResponse(res,true,err)
+                        //     }
+                        // })
+                    })
+
+                })
+                
+            })
+
+            
+
+            
+        })
     },
     // remove sneaker in the list
     removeSneaker: function(req, res){
