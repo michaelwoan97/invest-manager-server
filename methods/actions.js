@@ -329,10 +329,13 @@ var functions = {
 
         // check whether updated image is available
         if(sneaker.img != null && sneaker.img.length){
-            User.findOne({ _id: userID, data: { $elemMatch: { id: sneakerID}} })
+
+            // User.findOne({ _id: userID, data: { $elemMatch: { id: sneakerID}} })
+            User.findOne({ _id: userID, "data.id": sneakerID }, {"data.$": 1})
             .then(sneakerStock => {
                 console.log(sneakerStock)
-                let sneakerImgFile = sneakerStock.img
+                let sneakerResult = sneakerStock.data[0]
+                let sneakerImgFile = sneakerResult.img
                 let image = sneaker.img
                 let bitmap = Buffer.from(image, 'base64')
                 // ovewritten image file no matter what
@@ -341,57 +344,58 @@ var functions = {
                         console.log(err);
                         return functions.sendBackResponse(res,false,err)
                     }
-                    // update sneaker stock
-                    sneakerStock.name = sneaker.name
-                    sneakerStock.notes = sneaker.notes
-                    sneakerStock.available = sneaker.available
-                    sneakerStock.save().then(result => {
-                        console.log(result)
-                        return functions.sendBackResponse(res,true,result)
-                    })
-                    .catch(err => {
-                        console.log(err);
-                        return functions.sendBackResponse(res,false,err)
-                    })
+
+                    User.findOneAndUpdate(
+                        { _id: userID, 
+                            data: { $elemMatch: { id: sneakerID}} 
+                        },
+                        {
+                            $set: { 
+                                "data.$.name": sneaker.name,
+                                "data.$.notes": sneaker.notes,
+                                "data.$.available": sneaker.available,
+                            }
+                        },
+                        function(err, result){
+                            if (err){
+                                console.log(err);
+                                functions.sendBackResponse(res,false,err)
+                            }
+                            else{
+                                console.log(result)
+                                functions.sendBackResponse(res,true,result)
+                            }
+                        }
+                    )
                 })
 
 
             })
                 
-            // User.findOneAndUpdate({ _id: userID, data: { $elemMatch: { id: sneakerID}} }, (err,sneakerStock) => {
-            //     if(err){
-            //         console.log(err);
-            //         functions.sendBackResponse(res,false,err)
-            //     }
-            //     console.log(sneakerStock)
-            //     let sneakerImgFile = sneakerStock.img
-            //     let image = sneaker.img
-            //     let bitmap = Buffer.from(image, 'base64')
-            //     // ovewritten image file no matter what
-            //     fs.writeFile(sneakerImgFile, bitmap, function(err){
-            //         if(err){
-            //             console.log(err);
-            //             return functions.sendBackResponse(res,false,err)
-            //         }
-            //         // update sneaker stock
-            //         sneakerStock.name = sneaker.name
-            //         sneakerStock.notes = sneaker.notes
-            //         sneakerStock.available = sneaker.available
-            //         sneakerStock.save().then(result => {
-            //             console.log(result)
-            //             return functions.sendBackResponse(res,true,result)
-            //         })
-            //         .catch(err => {
-            //             console.log(err);
-            //             return functions.sendBackResponse(res,false,err)
-            //         })
-            //     })
-
-
-            // })
             
-           
-            
+        } else {
+            User.findOneAndUpdate(
+                { _id: userID, 
+                    data: { $elemMatch: { id: sneakerID}} 
+                },
+                {
+                    $set: { 
+                        "data.$.name": sneaker.name,
+                        "data.$.notes": sneaker.notes,
+                        "data.$.available": sneaker.available,
+                    }
+                },
+                function(err, result){
+                    if (err){
+                        console.log(err);
+                        functions.sendBackResponse(res,false,err)
+                    }
+                    else{
+                        console.log(result)
+                        functions.sendBackResponse(res,true,result)
+                    }
+                }
+            )
         }
 
     },
