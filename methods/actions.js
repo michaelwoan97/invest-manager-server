@@ -5,7 +5,9 @@ var {User, Sneaker, Stock}= require('../models/user')
 const path = require('path')
 
 const IMAGEDIR = "/../users-sneaker-images/"
+const USERSIMAGEDIR = path.join(__dirname+IMAGEDIR)
 const IMAGENAME = "sneaker-image"
+
 // all function to perform when request come to server
 var functions = {
     addNew: function(req, res){
@@ -102,7 +104,7 @@ var functions = {
 
         User.findById(userID).then(function (user) {
             // check whether the folder for storing sneaker image of user exist
-            let usersImageDir = path.join(__dirname+IMAGEDIR)
+            let usersImageDir = USERSIMAGEDIR
             let imgUserDir = path.join(usersImageDir+user.name+"/")
             // if(!fs.existsSync(imgUserDir)){
             //     fs.mkdirSync(imgUserDir, { recursive: true })
@@ -124,16 +126,29 @@ var functions = {
                             return functions.sendBackResponse(res,false,err)
                         }
                     }
-
-                    let sneakerImgFile = path.join(sneakerImgDir+IMAGENAME+".jpg")
-                    let image = newSneaker.img
-                    let bitmap = Buffer.from(image, 'base64')
-                    fs.writeFile(sneakerImgFile, bitmap, function(err){
-                        if(err) {
-                            console.log(err);
-                            return functions.sendBackResponse(res,false,err)
-                        }
-                        newSneaker.img = sneakerImgFile
+                    
+                    // check whether the image is not empty
+                    if(newSneaker.img != null && newSneaker.img.length){
+                        let sneakerImgFile = path.join(sneakerImgDir+IMAGENAME+".jpg")
+                        let image = newSneaker.img
+                        let bitmap = Buffer.from(image, 'base64')
+                        fs.writeFile(sneakerImgFile, bitmap, function(err){
+                            if(err) {
+                                console.log(err);
+                                return functions.sendBackResponse(res,false,err)
+                            }
+                            newSneaker.img = sneakerImgFile
+                            user.data.push(newSneaker)
+                            user.save().then(result => {
+                                console.log(result)
+                                return functions.sendBackResponse(res,true,result)
+                            })
+                            .catch(err => {
+                                console.log(err);
+                                return functions.sendBackResponse(res,false,err)
+                            })
+                        })
+                    } else {
                         user.data.push(newSneaker)
                         user.save().then(result => {
                             console.log(result)
@@ -143,16 +158,11 @@ var functions = {
                             console.log(err);
                             return functions.sendBackResponse(res,false,err)
                         })
-                        // await user.save(function(err, result) {
-                        //     if(err){
-                        //         console.log(err);
-                        //         return functions.sendBackResponse(res,false,err)
-                        //     } else {
-                        //         console.log(result)
-                        //         return functions.sendBackResponse(res,true,err)
-                        //     }
-                        // })
-                    })
+                    } 
+
+                    
+                    
+                    
 
                 })
                 
@@ -293,29 +303,96 @@ var functions = {
         const userID = req.body.userID
         const sneakerID = req.body.sneakerID
         
-        User.findOneAndUpdate(
-            { _id: userID, 
-              data: { $elemMatch: { id: sneakerID}} 
-            },
-            {
-                $set: { 
-                    "data.$.name": sneaker.name,
-                    "data.$.notes": sneaker.notes,
-                    "data.$.img": sneaker.img,
-                    "data.$.available": sneaker.available,
-                }
-            },
-            function(err, result){
-                if (err){
-                    console.log(err);
-                    functions.sendBackResponse(res,false,err)
-                }
-                else{
-                    console.log(result)
-                    functions.sendBackResponse(res,true,result)
-                }
-            }
-        )
+        // User.findOneAndUpdate(
+        //     { _id: userID, 
+        //       data: { $elemMatch: { id: sneakerID}} 
+        //     },
+        //     {
+        //         $set: { 
+        //             "data.$.name": sneaker.name,
+        //             "data.$.notes": sneaker.notes,
+        //             "data.$.img": sneaker.img,
+        //             "data.$.available": sneaker.available,
+        //         }
+        //     },
+        //     function(err, result){
+        //         if (err){
+        //             console.log(err);
+        //             functions.sendBackResponse(res,false,err)
+        //         }
+        //         else{
+        //             console.log(result)
+        //             functions.sendBackResponse(res,true,result)
+        //         }
+        //     }
+        // )
+
+        // check whether updated image is available
+        if(sneaker.img != null && sneaker.img.length){
+            User.findOne({ _id: userID, data: { $elemMatch: { id: sneakerID}} })
+            .then(sneakerStock => {
+                console.log(sneakerStock)
+                let sneakerImgFile = sneakerStock.img
+                let image = sneaker.img
+                let bitmap = Buffer.from(image, 'base64')
+                // ovewritten image file no matter what
+                fs.writeFile(sneakerImgFile, bitmap, function(err){
+                    if(err){
+                        console.log(err);
+                        return functions.sendBackResponse(res,false,err)
+                    }
+                    // update sneaker stock
+                    sneakerStock.name = sneaker.name
+                    sneakerStock.notes = sneaker.notes
+                    sneakerStock.available = sneaker.available
+                    sneakerStock.save().then(result => {
+                        console.log(result)
+                        return functions.sendBackResponse(res,true,result)
+                    })
+                    .catch(err => {
+                        console.log(err);
+                        return functions.sendBackResponse(res,false,err)
+                    })
+                })
+
+
+            })
+                
+            // User.findOneAndUpdate({ _id: userID, data: { $elemMatch: { id: sneakerID}} }, (err,sneakerStock) => {
+            //     if(err){
+            //         console.log(err);
+            //         functions.sendBackResponse(res,false,err)
+            //     }
+            //     console.log(sneakerStock)
+            //     let sneakerImgFile = sneakerStock.img
+            //     let image = sneaker.img
+            //     let bitmap = Buffer.from(image, 'base64')
+            //     // ovewritten image file no matter what
+            //     fs.writeFile(sneakerImgFile, bitmap, function(err){
+            //         if(err){
+            //             console.log(err);
+            //             return functions.sendBackResponse(res,false,err)
+            //         }
+            //         // update sneaker stock
+            //         sneakerStock.name = sneaker.name
+            //         sneakerStock.notes = sneaker.notes
+            //         sneakerStock.available = sneaker.available
+            //         sneakerStock.save().then(result => {
+            //             console.log(result)
+            //             return functions.sendBackResponse(res,true,result)
+            //         })
+            //         .catch(err => {
+            //             console.log(err);
+            //             return functions.sendBackResponse(res,false,err)
+            //         })
+            //     })
+
+
+            // })
+            
+           
+            
+        }
 
     },
     sendBackResponse: function(res,status,data){
