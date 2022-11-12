@@ -103,6 +103,9 @@ var functions = {
         // )
 
         User.findById(userID).then(function (user) {
+            if(user == null){
+                return functions.sendBackResponse(res,false,"User Not Existed!!!")
+            }
             // check whether the folder for storing sneaker image of user exist
             let usersImageDir = USERSIMAGEDIR
             let imgUserDir = path.join(usersImageDir+user.name+"/")
@@ -186,22 +189,45 @@ var functions = {
         const userID = req.body.userID
         const sneakerID = req.body.sneakerID
 
-        User.findByIdAndUpdate(
-            userID,
-            {$pull: {
-                data: { id: sneakerID}
-            }},
-            function(err, result){
-                if (err){
-                    console.log(err);
-                    functions.sendBackResponse(res,false,err)
-                }
-                else{
-                    console.log(result)
-                    functions.sendBackResponse(res,true,result)
-                }
+    
+
+        User.findOne({ _id: userID, "data.id": sneakerID }, {"data.$": 1})
+        .then(sneakerStock => {
+            if(sneakerStock == null){
+                return functions.sendBackResponse(res,false,"Sneaker Not Existed!!!")
             }
-        )
+            
+            const sneakerResult = sneakerStock.data[0]
+            // check whether the image is not empty
+            if(sneakerResult.img != null && sneakerResult.img.length){
+                let sneakerImgDir = path.dirname(sneakerResult.img.split('//').join("////"))
+                console.log(sneakerImgDir)
+                fs.rmdir(sneakerImgDir, { recursive: true}, (err) => {
+                    if(err){
+                        console.log(err);
+                        return functions.sendBackResponse(res,false,err)
+                    }
+                    
+                    User.findByIdAndUpdate(
+                        userID,
+                        {$pull: {
+                            data: { id: sneakerID}
+                        }},
+                        function(err, result){
+                            if (err){
+                                console.log(err);
+                                functions.sendBackResponse(res,false,err)
+                            }
+                            else{
+                                console.log(result)
+                                functions.sendBackResponse(res,true,result)
+                            }
+                        }
+                    )
+
+                })
+            }
+        })
     },
     addNewStock: function(req,res){
         if(!req.body.userID || !req.body.userID.length){
@@ -333,6 +359,9 @@ var functions = {
             // User.findOne({ _id: userID, data: { $elemMatch: { id: sneakerID}} })
             User.findOne({ _id: userID, "data.id": sneakerID }, {"data.$": 1})
             .then(sneakerStock => {
+                if(sneakerStock == null){
+                    return functions.sendBackResponse(res,false,"Sneaker Not Existed!!!")
+                }
                 console.log(sneakerStock)
                 let sneakerResult = sneakerStock.data[0]
                 let sneakerImgFile = sneakerResult.img

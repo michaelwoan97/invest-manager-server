@@ -8,7 +8,7 @@ var {User, Sneaker, Stock}= require('../models/user')
 let refreshTokens = [] // store refresh token temp
 
 authenticate= function(req,res) {
-    console.log(req.body)
+    // console.log(req.body)
     User.findOne({
         name: req.body.name
     }, function(err, user){
@@ -23,9 +23,11 @@ authenticate= function(req,res) {
         {
             user.comparePassword(req.body.password, function(err, isMatch){
                 if(isMatch && !err){
-                    console.log(user)
-                    const token = generateAccessToken(user.toJSON())
-                    const refreshToken = jsonwt.sign(user.toJSON(), process.env.REFRESH_TOKEN_SECRET, {expiresIn: "1d"})
+                    // console.log(user)
+                    const payload = { "name": user.name, "password": user.password }
+                    // console.log(user.toJSON())
+                    const token = generateAccessToken(payload)
+                    const refreshToken = jsonwt.sign(payload, process.env.REFRESH_TOKEN_SECRET, {expiresIn: "1d"})
                     // console.log(token)
                     // console.log(refreshToken)
 
