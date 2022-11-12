@@ -24,7 +24,7 @@ authenticate= function(req,res) {
             user.comparePassword(req.body.password, function(err, isMatch){
                 if(isMatch && !err){
                     // console.log(user)
-                    const payload = { "name": user.name, "password": user.password }
+                    const payload = { "userID": user._id, "name": user.name, "password": user.password }
                     // console.log(user.toJSON())
                     const token = generateAccessToken(payload)
                     const refreshToken = jsonwt.sign(payload, process.env.REFRESH_TOKEN_SECRET, {expiresIn: "1d"})

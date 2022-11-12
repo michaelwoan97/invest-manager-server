@@ -7,6 +7,8 @@ const path = require('path')
 const IMAGEDIR = "/../users-sneaker-images/"
 const USERSIMAGEDIR = path.join(__dirname+IMAGEDIR)
 const IMAGENAME = "sneaker-image"
+const ESCAPESLASH = "//"
+const ESCAPEDOUBLESLASH = "////"
 
 // all function to perform when request come to server
 var functions = {
@@ -41,8 +43,43 @@ var functions = {
         // res.setHeader('Content-Type', 'application/json')
         // res.json({success: true, msg: req.user.data})
     },
+    processRequestImages: async function(res, data){
+        for(let sneaker of data){
+            if(sneaker.img != null && sneaker.img.length){
+                let sneakerImageFile = sneaker.img.split('//').join("////")
+                console.log(sneakerImageFile)
+                await fs.promises.readFile(sneakerImageFile, "base64")
+                .then(function (result) {
+                    sneaker.img = result
+                    console.log("success"+ sneaker.img)
+                })
+                .catch(function (err){
+                    console.log(err)
+                    return functions.sendBackResponse(res,false,err)
+                })
+            }
+        }
+
+        functions.sendBackResponse(res,true,data)
+
+    },
     getSneakerData: function(req,res){
-        return functions.sendBackResponse(res,true,req.user.data)
+        // loop through data array
+            // check whether the img is existed
+                // get the path of the img file
+                    // read it 
+                    // convert it to base 64
+                    // change img
+        // send it back
+        User.findById(req.user.userID).then( sneaker =>{
+            if(sneaker == null){
+                return functions.sendBackResponse(res,false,"User Not Existed!!!")
+            }
+            functions.processRequestImages(res, sneaker.data)
+        })
+        
+
+        // return functions.sendBackResponse(res,true,req.user.data)
         // res.setHeader('Content-Type', 'application/json')
         // console.log({success: true, msg: req.user})
         // res.json({success: true, msg: req.user.data})
