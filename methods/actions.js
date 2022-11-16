@@ -74,8 +74,10 @@ var functions = {
         User.findById(req.user.userID).then( sneaker =>{
             if(sneaker == null){
                 return functions.sendBackResponse(res,false,"User Not Existed!!!")
+            } else {
+                functions.processRequestImages(res, sneaker.data)
             }
-            functions.processRequestImages(res, sneaker.data)
+            
         })
         
 
@@ -263,6 +265,23 @@ var functions = {
                     )
 
                 })
+            } else {
+                User.findByIdAndUpdate(
+                    userID,
+                    {$pull: {
+                        data: { id: sneakerID}
+                    }},
+                    function(err, result){
+                        if (err){
+                            console.log(err);
+                            functions.sendBackResponse(res,false,err)
+                        }
+                        else{
+                            console.log(result)
+                            functions.sendBackResponse(res,true,result)
+                        }
+                    }
+                )
             }
         })
     },
