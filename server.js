@@ -31,7 +31,7 @@ if(!fs.existsSync(APPIMAGEDIR)){
     fs.mkdirSync(APPIMAGEDIR)
 }
 
-const PORT = process.env.PORT || 3000
+const PORT = 3333
 
 app.listen(PORT, () => console.log(`Server is listening on port ${PORT}`));
 

@@ -3,6 +3,9 @@ const mongoose =  require("mongoose")
 const fs = require('fs')
 var {User, Sneaker, Stock}= require('../models/user')
 const path = require('path')
+const emailValidator = require("validator")
+const nodemailer = require('nodemailer')
+
 
 const IMAGEDIR = "/../users-sneaker-images/"
 const USERSIMAGEDIR = path.join(__dirname+IMAGEDIR)
@@ -26,16 +29,66 @@ var functions = {
                 data:  sneakerData
             })
             
+            // check whether user registered with valid email
+            if(emailValidator.isEmail(req.body.name)){
+                // check whether the new user is already existed
+                User.findOne({name: req.body.name}).then(result => {
+                    if(result){
+                        const errorMsg = "User with name" + " " + req.body.name +" is already existed"
+                        console.log(errorMsg)
+                        return functions.sendBackResponse(res,false,errorMsg)
+                    } else {
+                        newUser.save(function(err, newUser){
+                            if(err){
+                                functions.sendBackResponse(res,false,'Failed to save!!!')
+                            } 
+                            else 
+                            {
+                                const transporter = nodemailer.createTransport({
+                                    service: 'gmail',
+                                    auth: {
+                                        user: 'NorbertoKoutras6114@gmail.com',
+                                        pass: 'djAxbT@IRC!Gi#S9R'
+                                    }
+                                });
 
-            newUser.save(function(err, newUser){
-                if(err){
-                    functions.sendBackResponse(res,false,'Failed to save!!!')
-                } 
-                else 
-                {
-                    functions.sendBackResponse(res,true,'Successfully saved')
-                }
-            })
+                                transporter.verify(function (error, success) {
+                                    if(error) {
+                                        console.log(error);
+                                    } else { 
+                                        console.log('Server validation done and ready for messages.') 
+                                        const email = {
+                                            from: 'SophiaBrincat3528@gmail.com',
+                                            to: req.body.name,
+                                            subject: 'Welcome To Invest Manager',
+                                            text: 'Hello! Welcome to Invest Manager!'
+                                        };
+                                        transporter.sendMail(email, function(error, success){
+                                            if (error) {
+                                                console.log(error);
+                                            } else {
+                                                console.log('Nodemailer Email sent: ' + success.response);
+                                            }
+                                        });
+
+                                    }
+                                });
+
+
+
+                                functions.sendBackResponse(res,true,'Successfully saved')
+                            }
+                        })
+                    }
+                })
+            } else {
+                const errorMsg = "User with registered email " + " " + req.body.name +" is not a valid email!!"
+                console.log(errorMsg)
+                return functions.sendBackResponse(res,false,errorMsg)
+            }
+            
+
+            
         }
     },
     getInfo: function(req, res){
