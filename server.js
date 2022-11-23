@@ -33,5 +33,5 @@ if(!fs.existsSync(APPIMAGEDIR)){
 
 const PORT = 3333
 
-app.listen(PORT, () => console.log(`Server is listening on port ${PORT}`));
+module.exports = app.listen(PORT, () => console.log(`Server is listening on port ${PORT}`));
 

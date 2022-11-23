@@ -44,35 +44,35 @@ var functions = {
                             } 
                             else 
                             {
-                                const transporter = nodemailer.createTransport({
-                                    service: 'gmail',
-                                    auth: {
-                                        user: 'NorbertoKoutras6114@gmail.com',
-                                        pass: 'djAxbT@IRC!Gi#S9R'
-                                    }
-                                });
+                                // const transporter = nodemailer.createTransport({
+                                //     service: 'gmail',
+                                //     auth: {
+                                //         user: 'NorbertoKoutras6114@gmail.com',
+                                //         pass: 'djAxbT@IRC!Gi#S9R'
+                                //     }
+                                // });
 
-                                transporter.verify(function (error, success) {
-                                    if(error) {
-                                        console.log(error);
-                                    } else { 
-                                        console.log('Server validation done and ready for messages.') 
-                                        const email = {
-                                            from: 'SophiaBrincat3528@gmail.com',
-                                            to: req.body.name,
-                                            subject: 'Welcome To Invest Manager',
-                                            text: 'Hello! Welcome to Invest Manager!'
-                                        };
-                                        transporter.sendMail(email, function(error, success){
-                                            if (error) {
-                                                console.log(error);
-                                            } else {
-                                                console.log('Nodemailer Email sent: ' + success.response);
-                                            }
-                                        });
+                                // transporter.verify(function (error, success) {
+                                //     if(error) {
+                                //         console.log(error);
+                                //     } else { 
+                                //         console.log('Server validation done and ready for messages.') 
+                                //         const email = {
+                                //             from: 'SophiaBrincat3528@gmail.com',
+                                //             to: req.body.name,
+                                //             subject: 'Welcome To Invest Manager',
+                                //             text: 'Hello! Welcome to Invest Manager!'
+                                //         };
+                                //         transporter.sendMail(email, function(error, success){
+                                //             if (error) {
+                                //                 console.log(error);
+                                //             } else {
+                                //                 console.log('Nodemailer Email sent: ' + success.response);
+                                //             }
+                                //         });
 
-                                    }
-                                });
+                                //     }
+                                // });
 
 
 
@@ -145,9 +145,10 @@ var functions = {
             return functions.sendBackResponse(res,false,"Please include userID")
         }
 
-        if(!req.body.newSneaker || !req.body.newSneaker.length){
+        if(!req.body.newSneaker){
             return functions.sendBackResponse(res,false,"Please enter new sneaker info!!!")
         }
+        
         
         const userID = req.body.userID
         const newSneakerInfo = JSON.parse(req.body.newSneaker)

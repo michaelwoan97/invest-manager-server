@@ -44,7 +44,7 @@ authenticate= function(req,res) {
                         }
                     })
                     
-                    console.log(token)
+                    
                     res.setHeader('Content-Type', 'application/json')
                     res.json(JSON.stringify({success: true, token: token, refreshToken: refreshToken, userID: user._id}))
                 }
