@@ -1,6 +1,7 @@
 const chai = require('chai')
 const chaiHttp = require('chai-http')
 const server = require("../server")
+const dataTest = require("./data-testing")
 
 //assertion style
 const should = chai.should();
@@ -10,10 +11,12 @@ chai.use(chaiHttp)
 describe("Automated Testing API", () => {
     let isAuthenticated = false;
     let doHaveUserID = false;
+    let doHaveSneakerID = false;
     let userTestingID;
+    let sneakerUpdateID;
     let refreshToken;
     let accessToken;
-    const newSneakerDataTesting = "{\"id\":\"1\",\"name\":\"Fatz\",\"notes\":\"Nulla neque libero, convallis eget, eleifend luctus, ultricies eu, nibh. Quisque id justo sit amet sapien dignissim vestibulum. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Nulla dapibus dolor vel est. Donec odio justo, sollicitudin ut, suscipit a, feugiat et, eros. Vestibulum ac est lacinia nisi venenatis tristique. Fusce congue, diam id ornare imperdiet, sapien urna pretium nisl, ut volutpat sapien arcu sed augue. Aliquam erat volutpat. In congue. Etiam justo.\",\"img\":\"\/9j\/4AAQSkZJRgABAQAAAQABAAD\/4TCxRXhpZgAASUkqAAgAAAAKAA8BAgAHAAAAqgAAABABAgAPAAAAsgAAABIBAwABAAAABgAAABoBBQABAAAAhgAAABsBBQABAAAAjgAAACgBAwABAAAAAgAAADIBAgAUAAAAlgAAABMCAwABAAAAAQAAAGmHBAABAAAAwgAAACWIBAABAAAAtAEAAKoCAABIAAAAAQAAAEgAAAABAAAAMjAyMjoxMTowNyAxMToxNzo0OABHb29nbGUAAHNka19ncGhvbmVfeDg2AAAQAJqCBQABAAAAkAEAAJ2CBQABAAAAmAEAACeIAwABAAAAZAAAAACQBwAEAAAAMDIxMASQAgAUAAAAoAEAAAGRBwAEAAAAAQIDAAmSAwABAAAAAAAAAAqSBQABAAAAiAEAAJCSAgACAAAAMAAAAJGSAgACAAAAMAAAAJKSAgACAAAAMAAAAACgBwAEAAAAMDEwMAGgAwABAAAA\/\/8AAAKgBAABAAAAQAEAAAOgBAABAAAA8AAAAAOkAwABAAAAAAAAAAAAAACIEwAA6AMAAICWmAAAypo78AoAAOgDAAAyMDIyOjExOjA3IDExOjE3OjQ4AAkAAQACAAIAAABOAAAAAgAFAAMAAAAmAgAAAwACAAIAAABFAAAABAAFAAMAAAA+AgAABQAEAAEAAAAAAAAABgAFAAEAAABWAgAABwAFAAMAAABeAgAAGwAHACgAAACCAgAAHQACAAsAAAB2AgAAAAAAAAAAAADoAwAAAAAAAOgDAAAAAAAA6AMAAAAAAADoAwAAAAAAAOgDAAAAAAAA6AMAAAAAAADoAwAAAAAAAAEAAAAAAAAAAQAAAAAAAAABAAAAMTk3MDowMTowMQAAQVNDSUkAAABOb25lAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAQIEAAEAAADIAgAAAgIEAAEAAADhLQAAAAAAAP\/Y\/+AAEEpGSUYAAQEAAAEAAQAA\/9sAQwAGBAUGBQQGBgUGBwcGCAoQCgoJCQoUDg8MEBcUGBgXFBYWGh0lHxobIxwWFiAsICMmJykqKRkfLTAtKDAlKCko\/9sAQwEHBwcKCAoTCgoTKBoWGigoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgo\/8AAEQgA8AFAAwEiAAIRAQMRAf\/EAB8AAAEFAQEBAQEBAAAAAAAAAAABAgMEBQYHCAkKC\/\/EALUQAAIBAwMCBAMFBQQEAAABfQECAwAEEQUSITFBBhNRYQcicRQygZGhCCNCscEVUtHwJDNicoIJChYXGBkaJSYnKCkqNDU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6g4SFhoeIiYqSk5SVlpeYmZqio6Slpqeoqaqys7S1tre4ubrCw8TFxsfIycrS09TV1tfY2drh4uPk5ebn6Onq8fLz9PX29\/j5+v\/EAB8BAAMBAQEBAQEBAQEAAAAAAAABAgMEBQYHCAkKC\/\/EALURAAIBAgQEAwQHBQQEAAECdwABAgMRBAUhMQYSQVEHYXETIjKBCBRCkaGxwQkjM1LwFWJy0QoWJDThJfEXGBkaJicoKSo1Njc4OTpDREVGR0hJSlNUVVZXWFlaY2RlZmdoaWpzdHV2d3h5eoKDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uLj5OXm5+jp6vLz9PX29\/j5+v\/aAAwDAQACEQMRAD8A4P8AGgClwaUV5x3ibQe1NKD0FSij60ARBR\/dFIVH92pMCjFAEJX2qMqPT9anIPNRsKYiBlqIr7n86nYGomzQBA6n1NQtkdzViTp0qB6pEkZ+tMJ96cajY8VSATPvRupppM0xD8+tAbFMz70CmIlDUoao6BQBJmmlqaTTC3FAD0OZBWwhyoPqKxoOZCfTitiHPlL9KTGh5HFGKUDNAGKQDcd6Mdaeo5ox1oAgmXfEy+oqt5cJUHcR7ZzV\/bxWVcjypXHQdRTQEpSDH32z9KYNucLkqPWqEsjPII1YgdSRVyEYUAdKdhXLMfA+tW4F\/WqsIy3PQVet1Jakxonsk2s0R\/h5H0NXR19qjMW1o2U4bBB+lSqBjJqRjkGTTiBnHYUq\/Kue5p8Cc7j0HT60gHxrsXnqetKOTk0Hk4p3T8KAMbB7E0YPr+lLil57VBYAH1H5U4Z7t+lItPGKAGnP94UmGx\/CafwaTaKAImDf7NRsG9F\/Op9o9KjdfagCu6n0H51A+efl\/WrLCoXpiKlxNHCu6VljXOMswHNU2vbXP\/HxD\/38H+NLrsKzWi713Krgnn6j+tO8d+F7PQtPtruwZpI5JPLcStnqCQRjHof0raEFJGM5uLIhcQv9yVG7cMDQ30NYXhrT11rWbewJWHzt37wKWxhS3TPtXX6l8PI7LTbu6+3mTyInl2CHG7aCcZ3e1V7Jk+1MkkehpufrXLb4v+eTf99\/\/Wr0eP4awSxrJHqpZGAZSIeoP\/AqpUw9oYOaM1ka1aHRtXubEySkwtgODtyCMg47cGtfw54b1DX7F7qzvRHGkhiIlkYHIAPYHjkU\/Zi9oPDDHWlBHrVTxLol74e+zfbb1n8\/dt8l2ONuM5zj+8Kg8O6bd6\/eyWtleyJIkZlJlYgYBA7Z9RS5GNVEaJx6imGpdY8Oazo1nNdXNzG1vHgF1IbOSAMA89TWZYSTSNuklEkbKSPlA74\/xpONhqSZpWo5PrmtqEYjrHsxl1HvW0orNmiHDpQRxSgcGlpDEFKRzQOKU+1AhMVla0pEQkHbg1rnmq99CJraROOR37UIDnrRcgsepq9GaqW8ciJ86OuemRirluuTirZKLkC4Qn1rT06PPzHoKo7cIPVjitmJPKgVe5HNQykL1Yn1p0YyfYU0DipANqY7mpGOX52\/z0qfGBgflVS+u006zaaRSzHhVHc9h7U7TLxb20Sccbh09KduoX6FofLn170DuTwBSD5jTXbe20fdB6+ppAZYye4\/KnAe4pAv1pwFQWJgjuKXJ9qXHtRgjtQAmT6CkBPoPzp1Jj1oAQk+lMLH0\/WpMUhAoArsc9jUDj2NWmWoXWgRn3sfm20qbSSVOPr2rN0jVJtW1mw0bXJ1n0reFWIoFwdhCDcoDZyQOtbbLVzwbptleWmpW8ttGt3FIdlz5Y8yMMPlKt1BGCRXRQetjGstLl678I6ZpsMuoaTbSxXtrG0sIWVmDOASAQSc56Yrj2+JOrspDWunkHggxvz\/AOP1z8PiTWoSSmq3hJ4+eUt\/PNepWnhHw5f2kF4mm7VuI1lA81xgMM9A2K6TnKQ+G2jEAi6vyD38xP8A4iufufHGpaNczaXawWb29i5to2kRixVDtBJDAZwOwFU9W8V63puqXljZ3pitraZ4YkMSNtRWIUZIJPAHJ5rqvC\/h3SNe0S31PUrLzb25Z3mk8113NvYE4BAGcdhQBWsfDNt4w09NcvppoL67zvWHHljaSgwCCeijv1qOXVY\/h850qK3a+Wb\/AErzGk8sjPy7cYOfuZz71leI9c1Hw3rNzpOi3H2bT7fb5UWxX27lDHlgSeWJ5PetXw1pcXjXTJL\/AF6WWS7ikNuskZCYQAMOAMZy57UAOa2k+I1tHdFv7Nis3aJVx528kKSc\/LjtVcxJ8OJllI\/tOS9UoD\/qfLCkE\/3s53D06U3V9Sm8A3K6Xo6xz28yC5ZroFmDElSAVKjGEHb1qfR42+IUUkmtgwJZHbCbT5dxf72d27ptXpjrQAg1U\/EEHSREdOEX+kmXf5u4D5duML\/fznPauWv9J+yvcWkj7zasyBwMZ5OTiul1qNPh7LbyaMonkvVdXa7+YqF28Lt24zu5znoKx7uSSdr2ebbvlkdzt6c1E3YuCuHhp3mhRpDkjIye+K6WBQztnOAK53wkubMH6\/zNdPar8jHOQTXNPdnRDYd5K9s0nkD3qYUoqLl2K\/kD1NOEPvU1IaLhYj8n3H5UjRhVJY8fSpcVQ1m7FpaFhgueAPU\/5\/lTQtB0Ee5BzUn2XJz8ufXFc9a6jdvJjzMA9goratTLJgF2JPvVWYrpluG0LTxknKqckY6\/54q3y0jq\/VWwf6fpVizh2Lj0\/nSXSbZ0fs42n6jkf1pAJGuFJNKmBukkICLySelPVS5wKwfFmo+UgsYCQxAMjA9B\/d\/Hr9PrRFXdgbsrmXrV+b67Lj\/Up8qdeR6\/j\/hVjwxdmK5a2Y\/LJ8y\/XuP6\/nWQp3KBSh3ikWSI4dDuX6+lbuOljFPW56DI2P3adT1PoKEXaMAVU0q4S5tUlQ53DJq6PSuc2MlV9S2frTgv+01PIwaFwagsQKf7zUAH++36U\/8Az1pdw7n9aBjNrf32\/IUmw\/3ifwqQEdv50UgGBD6\/pSFT\/kVJikxQBAQcdvy\/+vUTq3Yj8v8A69WyuajZeKYig4b1X8q5zWtKudR1CKCyi824lGVG4LnAOeScdAK6qRazry6k024tb+FC727\/AHOm4EcjPbPT8aum7SM6ivE6Kw8TaZo9haadrFw1rf20MccsTIzkEKO6gg5GD171xGr+Gr7WtUutS0GA3WnXMjSRyl1TcSfm4YgjDbhyO1aUGkweP7m51OKYabMhWOWHb5xbA4fOVxkcYx\/DVuTVZfh\/DFpbwtqUUmZkmLeUFycFAMN0Iz1\/iruOQ1vC2o2WjaHa6VrV1DbX0W9ZIZWHALsRk9MYI71yXiY6rJ4hvJvDb3slg2wK+nszR5CDIynGc54960hpS\/EJm1UTDTjF\/oxi2+dux827OV\/vYxjtU8OpQfD5TpUyy3zTH7UJEURgA\/LjBJ\/ufrQBN4U\/s\/8Asr\/irIrRNS8w\/NqaqJnTjB+f5iOoB9sdqyvF32z+0o\/+EP8AtH9n+SN\/9l58rzNzZz5fG7G33xj2p+p6bcePp01TSzDbwxILZkuWIbcCWJG0HjDj9at6RqcPgG2bS9YWSa4mc3KtagMoUgKASxU5yh7elAEnhD7H\/Zsv\/CYfZ\/7Q847P7Ux5vlYGMeZztzu9s596y\/Gb3UV9G3hNpk00QgyNphIi8zc2cmPjdjb15xiptX0yfx7crqmjtHBbxILYrdEqxYEsSAoYYw47+tSaDrdp4IiutH1NZ5rtZvNZrdQyDci4ALEHoB2oAn8P2n9ueF7y48RpJc3Nq8hi88spQbFPbBwT\/KucwVssHJJBOfrzWt4jsp\/EW3xLG8aaYkWyONyRL8rEcgAj75Pfp+VZ86BIVQHOBisqjNaa3JvCSY0lGPct\/M108KbYVB4OMn61z\/hiPGi2ykfez+RY10oHBrnqbs3p7EeOKUCnheMU4LUFkZHakAJNShcgk0jDAoAj6AntXIa\/c\/aL3Yp+WPj8f8\/1rptUuBbWjt\/Fjj61xtuhkly2SScknvVwXUiXYvabASRXWabb7VBI5rL0m1yRxXT20WFptgkSRrhcU26j327AdR8w+oqbGBxUU7hQQxAVeWJ6VIynqN2tjaPKR87fKi4zz2rg7ktJJI7nLsSxPqTWnrd413ebwf3S\/Kgz29fqf8KzHyK2grGMncjgPUVITmohwTinjpVkm14Yu\/Kne2c\/K3zJ\/Uf1\/OuuXpXnUTtFIsiffQ7h7+1d5p9wtzbRuhyCAaymramsHpYgI4JNNCgVKRkgCkKjNYGw0Y7E04CkVT\/eP0wKcF9WP6UgExinAeho2+hP6UAH1P6UAKAe7UflQFPr+lBBH0oATH0qN1HpUtIyk+n5UAVHjGOlZ2qW++xnA4IXcPw5\/pWwUb2\/KomjYjqPypp2E1cy9akCaVZz+Enji1GQJ9qtdPUFiNvVkXJAU8dP4qh0QNqrSL49hmWKJR9lluwbdAT95d3y5Y4U85Pyn3pugaPJp73niGGYStp7SK1qRtEiqmCd3OODnGDyKbc6+vjqa00U2psS8plE\/meZgqjHG3Azn616EXdXOFqxY1p\/7IECeAG8zzdxuhaf6VjGNmc7tvVvTP4UzRIYtWmuJvH0YinVUS2e7JtSy5YsABtDYJH\/AH1Ug0tvh6raqJjqKzf6MYdvk7c\/Nuzlv7uMY71C06fEa5jgJ\/s2SyRnUf67zAxUH+7jGB69aYg1e4vtKuhb+BN8mmlBJL9lT7SolJIOWIbB2heM\/wA6s6PDYatbPP46aNNTVykYupPszeVgEfKCuRuL849fSkMjfDiJYjjUkvmLD\/lj5ZTGf72c7h6YxTP7L\/4WH\/xNvO\/s7yf9F8rb52cfNuzlf7+MY7UAZ+r6rqOjajNZ+FWZNKTa0ZhjEysSoJIYg55OOvat7R\/Ddn4n0uLVtYE39oXG4SsjbBlSUHGOOFFUf+Eo\/wCEM\/4kH2P7b9k\/5b+Z5e7f8\/3cHGN2Ovam3vgy88RzjWPtsMQvUSYRspJQFRhc98DAzQBnPqskX2rwzEqrp9rMyIxyZHxLzuPTqSeAO1M1LcIm2\/e2kj64NXotdt9WsNK0+3SUGyCo2\/AD7UwGGD7H86qX7ETSDHMalsfgKwm7ysbU17tzY0CPGnWAHH7lW\/T\/AOvWuAelRadAsMKxJ0jVUGfYf\/qq2FxXPJ3Z0RVkMC4p2MA+ppSR6Gk3f7J\/SkMMYFRnk08ucn5G\/Mf41WvJxBbO7KVAHXI\/xoA5\/X7jzrkRL91OT9e3+feq+nW+Xz71EoaWRnb7zHJroNJtOmRWi0RnuammW21B6mthEwOKjtYgqVY6A1JRBK2xc9+grnNdvSp+yRE7jzIfb0rW1e4+zQiUY38hVP8An8a41ifNLucsxySe5zVxRMn0I5kJU8c9aidR5fvVthuB2\/Sq8ibQVatUZMq7aQelTEdajAw1MQ5Ritrw1cssrWmcKfmU+3cfn\/OsYU6KVoJY50+9Gd31HcflUtXRUXY7UDrQBkfU4p2O1KBz9K5TpGMMZPpQCfSnOOg\/GkIxk0gF\/L86MUD6Gl2+1ACqKcB701QR608HH\/6qQCY\/zmkIHp+tO3D\/ACKUMKAISvsaaR\/sn9KmOD0pMf5xQByWoaDe6j4nQ6bJBFPGguVM2QBggdge4zWtqnjXTNRguNLFveQXU2YEeZVVYpDkBmIYkYPUgdqi8T215I9l\/Z1w1rcSyC3EiuyH5iMZK844NRz6xoWjONP13SI7nU4EUTzx28cgkYqDu3NhiTnJJHUnr1ruou8Djqq0mVYPDuoeH5RqmvzxX2m2+fNgR2lLbgVHysADgsDyemam+12fiQfY\/B0H9k36fvpJtgg3RjgrujyTyynHTj2qGy0XxB9kt9TvtVa70sIt1LbtcSOZYsbiu0jBJXjBOKmGr6VrWdO8L2b6Zqs\/EdwsawABfmYFkJbBCnjHXFamYf8AIsf8jp\/xOPtP\/Ht\/y8eVt+\/\/AKzGM7l6dcc9BR9kvPEn+meD7j+ydPT908G8wbpByW2x5B4ZRnrx7CnCJvDMTS+NP+JwsxC2\/P2jyiM7v9ZjGfl6elCpf64rX3gpxp1in7mS3OIt0g5LbVyvQqM5zxQA3+1tH0P\/AIl3iWw\/tHVof9dc+Sk2\/PzL87kMcKVHI7YqDUtH8RrDNqNlqckGlsGnjiS4kTyIfvBdnQYXAwM4xipY77QLVTB4qg+1azGStxLsLbjnjnvhdo\/CluR4rsYo\/wC3biI6LlY7sqI+IiQrDgBuQccc0AUdZ+za3cLJ4UtxAsSDf5cYhyc+3fBqGxsZo9QiWWZ3kZlDCTkkg5PPpgGuo8NRWAbU5tEQDTvkERO7kgEt97nqe9NhiUSTSFQWB+U45HHauaU3do6IQVrl63X92SRgn\/8AVUoHFORNqKo7DFLj0rnNxm2nbe1OVecmlx1oAaF4rnPEdxukW3Q8Dlq6OZvLhZj2HFcfIGmundupNVFCY7TrcvJ04Fdbp9sFUcVnaRaYKnFdLFDtXpg1TYkKi4FNcqqksQFUZYmpWG0e\/asnVpd0bQg8EHJ9TSSuJuxlajKbmVic7egHpWJcxEL9DWw0TCBJG6HFVbtQQTjjpWq8jMowkbT6iopl3MT2pv3JTjkHpU2QRiqQik4K81XJ5OavTLkHFVnT5TTRI5Bu+lOYYHHakgbKY7inmkM7ZRzT0Xv680bf1p68LXIdRCBmQn0GP8\/pSkdhT0XjP86QdaAI8AEilGOeKlKAgmox9DmgA4pePWjJ9KUZ9KQCAfjTgtKKcFPrQAzA9KUAf5FPC\/5zS4x2oAy\/EELPpM7RFlljAkRxkFSpzkHscZrIhlsvDthE\/iu2TV7i9cyw3Kos5KBUABMmG9\/TmuqkjWSJkdNyOCpB7iua8M6Tq+gXV3JbvZSpcgbkct1BODkD3P51vQqKN0zGrByd0VYtH1zW42v9C1aS20qdm8i3luHQxqCRt2qCoAIIAB6YpLvXNF1FBY6BYHTdVnkSOC58hIfLYsAfmQlhkZHA70viTwxqeu6kb12sYHKBWCMx3Y7nI64wPwrpPL1JvDn9lfZ7TP2T7L5v2hv7m3djZ+OM1v7aHcx9lPsc\/wDY7vw2ftvjGcatYP8AuY4dxnKyHkNiTAHCsMjnmj7JeeJP9M8H3H9k6en7p4N5g3SDkttjyDwyjPXj2FT+D\/DOpeH9Slu91ncb4jFsMrJjJBznYf7tP8W+FdU8RajFdbrK3CRCLZ5rPnBY5zsHr+lP2sO4vZS7GpBp1slvFHqGn6fc3aIqTTPCHaRwMFix5OT3NVbfRxHMrXOoahfQj71veTebE\/puUjnB5HuBV7TtJ1W1sbe38qxbyY1j3faGGcDGcbParP2DVf8AnhY\/+BLf\/G68Kcsbztxenqj5yph82c243tfvH\/Mi8P26x6ZfMkaJFJPK0axrhQo+XA7AfLUEcfzgDjLZrd0PTWsNHgtJmV3RSGZehJJJx+dZkMZ80nAwo\/X\/ADmvSb1bPrYqySHAU9UyaeAQe35U8Zx2qSyEIaCuKmwcGmudkbMR0oEQeSZvMyPkRT+JP+f1rn7a133TccA12HliHTz\/AHiu4n1JrL0m13\/PjqeKpPQRd0212gHHT+daJXAqWKLYu0dqiuWVVbcQEUZYn0oEVWO+QICNzDgd8dz\/AJ9qxNdiNtKqDOwrxk5osNSM2tJKSwiZvLVT2B4\/nzWh4mjD26sPvIcn6GrSsQ9TNhAnsgvUVkzj90y9xVqwd1RkFRXke1zjqe1UhMxLkZPy0kZ3AGrE6bdwI6VAp24HrVIQrdPWoZFIBq1tOKhmGAfUU0SVIWCufQ1ITk1CRgmpV5GapiR6Ft5pGHy49eKmAwvuaaB830FcR1kZHBpQvP0FSFeBSxr3569aAGlflxz6ZqN1qwwwKYy8HNAEAUY5pcCkOQe4B\/Smk0gJAadk+lRA\/WpFP+TQA4H2o79KAR60fQ0DHLT1Gen86iH41KhoESonrUqoKarcU9WpgTRr7VMoYfw\/rUUbDuak81fUUCJQCB939aUfT9aj84c\/NTTOPWmItL9B+dYECfeOMEnGfUVq\/aAO9Vgi8kOvJJ5PvQNEIXrS7OlS4QA5dP8AvoU5dg58yP8A77FKwyIx1UvLm3tp4VuXKj72cE9OnStRVVwSjIwHowNMXToZPnniWWRuuVBwKYineXkM+lyvDIjlU6K2TzwMjtmtDTbUQxIMcqMfjUKaDYCVWWAblYMPmOAQc+tbKx7VwKaEyCT5FP0rkfFF+d4s42HUGXjv1A\/z7V0WsXq2sBcEFydsYz1Pc\/Qf5615\/cqRK24lmLHJPUn1q4rqQ2LCWDnHGOc1vzXf2mzUHliPmOO\/esOxYGYKep4rWji2pIetWxIz7dxHckdm\/nU96obDDr1qlMNp3L1z1q8g86LI7igkx2Bdmz3qhINrc9c1q3ERjc+lUbiMMpPfFNAIj5UD86a67uKIDlKmSMMCc81QjLdcE0QnDYqe4Xkn1quRgZHaqJ2PTiuelNReM+vNTMMKfelC4OBwBXEdREVpAPnxiptucmhE6kjk0DGbcmmyL8uOmeM1Kq+2aV15AHSgCjIuQRnkVVzjg7ga0HXluw9azrw+WSRnA9KdhDw31pQfrVEXIx\/F+VJ9qUdSaLDNAGnbhWYb+JerVEdWtweXUfU0WA2Q49acJB6muek121X\/AJar+BqJNfgkbbHuc\/7IJ\/lT5WLmR1Alx0Y08T4H3q5NtabOEtrk\/wDADTG1K8LYS0c56ZcD+tHKFzsBcj+9R9qXuwrjze3xjLGOGL\/fk\/wFVTfXJJ8y7tUH+y+f8KaiK53DXijuKYb5B\/FXFzz3KytGb0kqcELH\/wDXqGeQbctNeMf9kqKfKFzt21AY4b9ary6oFBywH1NcqUgWKISfa5WkUOFLnPP0IFRFbaMlhp87H\/aIP8zQkFzoZdaRuFlTJOAN1Qy6ypYRxyoW6AbsmsZPs32dZGtFBZiMFBkULco8ioqlfwoSC56JonzQDnNdFbxEQswALEcVheFYmlgjHZgCfYV1nl4AAGMcVLAoxpgk0soJUqvBP6VZdAv\/ANasn+1UPiGLT02kbGZ2\/wBrso\/DP5j3oSJuch4leZPEDRSEmMIFjXsOhrOv1ZJyWHUH+Vdb41tBJJZ3AADb9pP4f\/qrntZjyIsDHHJrVC6XMi3Yxyg45BrrbKFbm1kwcErmuQ759q6PRrzyoCe+MUMSMOTK+ZG3ZiKv6MfMjKk9KqXwzcuw4B5p2nSeRJzwpHWmImv48bieorFuRxXQXQDxOD17VgTkHI7ihBcqRNtcipwxAOD1qCRcDeOoqdCGWqEQz8j1qBxxVx1yKqToVBHtkVSJZ6eF3MPbn\/P60\/HWlQcMfwp+OB+dcR0jAvynFOCYXA+lSbeQMZqUJ0\/OmBW2e1NZOc9sdasleKYU+VuxoQFQrxkevesbUuEat6QYBHoKwdaG2FvfiqQHPZcqeTUDQLyXaVv+BH\/GroWopBincDOeCAHPkMcermmqIyk7m0iComRlR1zU80m042SH\/dXIqIOzafegIynCgbh9aqzJuiO3uJHBWOERoP7qnGfTip7aSUvMWJASJm+6R296jtHhSNllzuznjPSnxyRMLvywwPkNyfqKdhJmal1cTqXMrqPQEj+VSab5kmqW4aV2+bPLE9PxqGBMRkHHWrOjgf2tBx\/e\/wDQTVte6QnqVUkeR8PJgDnkUk4XB\/eA\/hU1sMoFJKjaCCBTLhMKf3rH6gU0JmjNzfXe5pOJDjaT6n0qvPt2niY\/8Cf\/AArQngla9uTEiMC5J3fU1BLa3JUgRx\/gP\/rVKehTH7JJHsmTdsW3XPPTlh\/SpJY32nl\/z\/8Ar0+H7RCLZfKUZiAcsCcYZun51PJI+04Cj\/gFIZTQE6e6nOVkHX6GqiJtuF9zWpZL5ttdBsEqVPAx7f41A0WJYx6tS7oo9U8DRBtNjf1GPyrpvLLMCDgA5+tYPw+j\/wCJLGp65I\/WupeAH5TkDIOR7c1mJnNeJNRTTbcMSPNkOyNcjr6\/Qf5615zaXLQa1b3DOxxcBmJOScnnn866D4mK6avbSAfujDtX6hjn+YrlrjBCMOuM1pFaAek+K4c6WzBdzRMHH4GuU16EfZlkGegrudgvNGUZyZIQc\/hXJSJ52kBGHKZU\/hkUn3FHaxyZx5fTmrFvIFAVT1pFiJD54I4xUCHbIDVkktwGckYyc063UPCyn7w4qSUAOGHIIqtFJtnY9ATg0DLcUpePB6jisu6TaxOMZrTVf3ntVa\/UFs+gxTRJlSA4I70sQwMd+9PbqKVO9MB6L1yKq3K84x0q27gjCnn1qtIvFCEenKvygd6kUfOfyoHAJ9KkjXI5rkOgai5kOccf5\/wqwi7mNNjTqeOeeP0qZBhST9aYiLYOSeg5NNMeFx1qzt47ZpCn6CgDOmj+VuK5vXsgKuOprsJI\/kziuQ8QKRcIvbk4qkNGNjiq8verTjiqc7YBJ6CgZWeInJy\/4D\/69CDZpsnBOZgOR9KhmvOTtBx67l\/wq5AFbSYGbrI7H8Qfar1RCsytb2xuJxCilnfhRnH1yamutNl022vWmUbjGAMMT35HIHtUlq8lpcx3EG3zEORuGRV65uZdUiuvNjCbgAAM\/U0XCxyUm5SQN2PYU\/Rmf+1YiScBX6j\/AGD7Vcnt38xtsbEe1LpNvJ\/asQ8tslX4z\/sNWj+EzS1IWhYIgA\/hHaqtzE4Q5\/lXQXemSTPGIzGCF6My5\/AGqdzo1wqHOD\/uru\/lQmrA1qbc0DLJIycZJNUZ2uYwSr4x7CuleKLJG4MPUKeffkZqnc2QlBCEfjWKkbOI\/UrZY5bQuM7oRwRnOQp\/xqlLFFg\/uh\/3wK6HUY11CG0S2R2mSBYmQjqwAHGM8de1VB4W1J1\/eWU6N6LC7f0FCa6isY2kQq8l7HGoH7sMcDHQ\/wD16kFoTeWy4+9IoH4nFdN4f8IanbT3MqWzOksRiZZU8vHIORlhzxV6Tw5PbXED3CxwujqyeZPGASDkd6HLXQFsdR4Ms\/IsZVx92Vh+RqzqGoqk0ttaDzbzhcYwqnrgn6ZP4GprGeDQ7Zk1q6giuLiZpgiZPB9uoGcj8Otc54j1uNtXiuraVGt7ZHZflIZiUxgfjzQkR1Od+ICPLa2csjAtE7Iw92Gf\/Za5LG6FDnrxW3qV6dS0i4lkyDG6suPrj+RrDBIjA7dauOw2eoeE5\/P8P2hJyVXyz+HFZEqCG7vrc8AtvA9j\/wDXzUvgCXdp88PeN9w+h\/8Ar0zxDmHV4ZMYEqFSfcH\/AOvQ0JbnLSpsu5FIyAetUrqLYu\/IIJ4rTvwRdBjwGNUrxSBt7elNCI4\/nhJz0qGePHNPtzsJBPUVJMCUNMOgunOBG6scn1ptzGWQkA+tQWxKzbT0NaEJyrrjOBTJMaVMMcVWLnoOlWpkxuHcVAcEGgAXsaa\/zHihTwalUU0B6gV6CpI1+U4OD0H1poGST6VYhXbj865DYeE449eKkVOOlOAxgeg5qRE4HFMRGEPoOaUg4OPoKkVRuJweKUJwMr3oAgmj4Pt1riPECj+0XAByqgH69f6ivQSvynNLoXhm11fXpGu0LQJFuZVwNzcAA9+gPQii40eTGCaUnYjYz1wTRHpM8smF259JFwv5kj+dfRFv4J0OL\/lwjf8A3+asDwpow+7ptt\/3wKpJic0fPMehXAQ+aLEt6rMi\/wA3NXE8N\/aYYFkvNPh8kkhTOoJz67civex4X0sdNPtf+\/Q\/wpf+EY0v\/oH2v\/flf8Kq0mSppHgX9gQRy7JNQswO5TzH\/kuP1rQTRNMiiby9YYg4JRbZuTz6nHc\/nXuUXh+xiXbHaQIvosYH9KsjT1AwKORhznz7HougOxa9W6nPUFbeNcfmxq1JZ6SgUWkd8QMf6x0XA+gU9q94\/s9T3P50CwUev50cjDnPE1k0gLj+xSx9Wun5\/Skt5oIZC8Wl2I9BJvkH5FsV7cLIe\/50+8tFSy3LkNnrR7MOc8gbz7jCwaNaox6eXZgn9Qat239vwxiOG3njQdFS0AA\/8drtrcyNclS74+prbgh+XNHs\/MOddjyx4NdklMhjvldlVWKRsm7Axk4HWg2OtSoVkXUWU9QQ5zXpeoxfum+lcdexctxTVO4c\/YxLWJ9MmUakJooY7OeKISIfl355xjueM+wrmLmY3XECfKDzk8mu+uLGW8OmW9nGnmskqFAQoVWklyBnj7rcD3rmTpRsr0SpNbm1U5bk7sfT\/DkVLjbcpSvsYzwz3szNKzSzN1ZiST9TUUmm3UalTG7KO4U16Zp\/hx7y2S5s54JLeUBlb5gcfQj+tSSeFrgQy266l+7bllECgZ64z1\/+tTsyeZHl+n2DPpWpL5ZPyM2MdCFzj865tYz5Jkx8oOK9ysPD66bAYvNMpzkZH3RgDaPbj9a8ptdPbyryzlULNFuDDrhhwf1FNOw1qXvAkoj1OaHdxLGCPqP\/ANda\/i+AmK3mH8MmPz4rmfDkvkapYS8YLeWT9a7fxBAZ9LuFUZZfnX6iqJe5wupoTGp5ypqrdLmLd1zitq\/h3Wxcj5Gxj8qoKols16ZAwaSGzLu\/L8xWhGBgZHocVJ5ZMRJqO6jIk49KtQMDBg+lUIzMYYeoq3CcgkHrVe4G1zjtVi0IK470CKl6hD57EVSC4JrYv4g0O8HkVktnPNMQzb8\/tUp7GmnPlg01CSpFAHqyDj6mrcY5+mOMfjUEK\/NmrNv8y98defeuY2JFXLYqdFADYHtTIxk56\/Sp9pEfy9e2aBEarlAc9ehqZVyPwpCvAA6VOo2g4HToTQIhCCup8A2wxqFwpyruqD6gZP8AOudA+XOM\/wCf\/rV2vgiFU0JZAMGaRnb652\/0qoK7CTsjZCUuypcUYrdIxuRbKXaKkxQBTFcj2UbRUmKMUAR7aTbUuKEwWwaAIdvNNvh\/oR+tPlIUt6Cqt7MptCMjOaQ0c7a\/8fZro7dfkrnLT\/j7NdNbfcFMbKt+mY2rkb2Ll67S8GUNcrer8zU4h0IRHsvNNkiOHN9EpI\/u7IMj\/wAeb865nXrZbe7vbdMlYpXQE+gYit+SVrS1jnZcpbzLdZ+oAA\/8gms7xXA0Ws6ikgwTKzj6Mcj9CKwqatmlNWOg+HEjSeErZSfnVnT6AOQP0rbKFYyDgnJ6fU1zPwndn0m+iPSK6YD6FVP9TXVujsZAD8ueD6D0\/PNUtjOXxMyrjJJVAC3cnoPrXj+rqdM8Uagkj7g0rMx9Q43j+Yr2qVAilVFeQfEe2SHxLI65JmgSZvYglf5KKVi4PU5SIlVYpkLFJuHr1zXpsZSe1Vs5SWPP5iuD0SJZ2mTaPvDn6\/8A6q7PRCzaTErn5ogY\/wAjiqGzFe0L6TcxdCuQPwPT9KwYlxCQvX3rs4MJ9pjfAAYOD9f\/ANVc08CpcyIp+XtSBGPIgLHPpVKNiMpmtKRAzYPGao3MXkzA9M1SEyN0zTIR5b4qx2zUUoxIrZ4oBks674G7nFZUqgDd+dbCjKjHORWZcphnT8qESUsnJHamRkqTT2+Vj60KAd3rTA9dA+Qjn5uOKsqCFPr2qNF+deDgc1ZVc4FcxqOjGB39OKsEZA4PWmIvTn3qVR8+ATwP8\/ypiBB+8Aqbggclsmo143EcmpRnIHHFIBJQRE2CAQMg16PocJh0eyjZdrCJdw98c\/rXnUkfnvFADh5XCr9Sf\/r16mowAB2FaUlqyJ7BSUtFbmQ2lxS0CgBMUAU7FAFAyGdtuRUcYO4k0swPmfjUgGBSGNugDavj7xrn57eRYi5JIzit98dDVe+UfYzx3oBHM2n\/AB9V09t9wVzFt\/x9V09r9wUDYl0PkNcvfD5mrqrkfIa5m\/HztVIRnXm2XSLmMD7qwoffm4P9RVfxqBJr1068hlQg+2xatGFWtZnOc+W5+pV4wP0kb86r6\/GFg0g\/xtp8O8+pwRn9Kxqq39epdNjfhWx+26xbE4RWjkx65BH\/ALLXeyqdvIwfQV578O5lg8UX8J4Mtur5P+y2P\/Zq9CkLvnjYPU9cfSiHwk1PiMu\/kWFWLZOBnCjJIrzT4j27Pe6dKYwGdJYiw9gCAT+Jr1CZApOBz3J5JrgfiVFK\/h+GcLs8m4SSQE\/dBBX+bChjjuec6JJi+UA\/fAyPoa7fRiFe8jHQtvA+o\/xrzqwmMGoRMfu79p+hNd\/pz4vj0AkTt7H\/AOvQW9jP1OdorxgM4ZSoPr\/nFZ8mWw471sa1EB85yByc\/SsxVDqF\/KhjRlSLiRvWqmqkPGrjqOtaV1GVlOazr5PkdOvcU0DRXj+aMY9KjkHH0otGyrLnpT2HWglEluAFB9Dg1BexgPv7VLA3UetS3CB4CD1xxTJOdueJCR0pigFc1NcKQvToarg9R2NMZ7TCuSxx6CrSLyT6cVFAnyjI56ke\/erKDCn8\/rXOaCgcVLGOSSaag556VImfL5HJ6gUCGgZwDxk1Kq8k9TSoOeOlPxgHtSAsaPGJ9csImX5d+\/PuoJ\/pXo4rh\/B8ZfXnZuVjhJB9CSB\/jXcCtqS0M6gUlLRWpmJSigUooABS0ClAoAayAhiewqEYbBPAqwRxVe4+TGO9IaKVxMFy7cDGKp3WoI9uUXOasasm6EAdD6VlS2RS3D89cUkUinbH\/Sq6i1+5XLWoxcCuptPuCmDHz\/cNc1qA+dq6ab7prnNRHzmqQjLWU4liwSrROq49d0bH9Iz+VQ6rmfSNIuW4JjeDHtG5GfyNXbXHz887nwP+3eaqt+Q3h7TAhz5Us6tz0JYNj8jWNTdlx6GR4TZYPHNtuA3SQyRr9eG\/oa9TmHevIrCQQ+L9HmIJxMVwP9pSP6163MJXUZKxj\/Z5P5n\/AAop7CqblC7KqNzsAvqTiuM8bKLzwzqMShshDJvA4wjbu\/stddfxpGm8qXbIGT8xGTisvUraO6tJreUfu5UaNuecEYNDFE+eXyd7DPQNXcaVcAizlBJycE\/UEfzrjREzhAD9\/wCXn+X8q6TQ33aLC6\/8s2wSfUHNDNTodZh8y1O71z+fFc3auzGMsPmx8w9COorrrtfNst2M5TNcXeLJZST\/ACkFZPNHurck\/qfyoYoskvRvJcdO1Zky9Gb6H8a0EnFxB8o461Vmj3xuvtQijFYCK5KjpmrmwVDf25SNJBznIqWBsxKT0IqiUQj5ZKtE5GOMVWl4bIqZeVBFBLMu6TEjrjjrWbjDH0NbV8v8QrLkUB+lNAf\/2f\/bAEMABgQFBgUEBgYFBgcHBggKEAoKCQkKFA4PDBAXFBgYFxQWFhodJR8aGyMcFhYgLCAjJicpKikZHy0wLSgwJSgpKP\/bAEMBBwcHCggKEwoKEygaFhooKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKP\/AABEIAPABQAMBIgACEQEDEQH\/xAAfAAABBQEBAQEBAQAAAAAAAAAAAQIDBAUGBwgJCgv\/xAC1EAACAQMDAgQDBQUEBAAAAX0BAgMABBEFEiExQQYTUWEHInEUMoGRoQgjQrHBFVLR8CQzYnKCCQoWFxgZGiUmJygpKjQ1Njc4OTpDREVGR0hJSlNUVVZXWFlaY2RlZmdoaWpzdHV2d3h5eoOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4eLj5OXm5+jp6vHy8\/T19vf4+fr\/xAAfAQADAQEBAQEBAQEBAAAAAAAAAQIDBAUGBwgJCgv\/xAC1EQACAQIEBAMEBwUEBAABAncAAQIDEQQFITEGEkFRB2FxEyIygQgUQpGhscEJIzNS8BVictEKFiQ04SXxFxgZGiYnKCkqNTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqCg4SFhoeIiYqSk5SVlpeYmZqio6Slpqeoqaqys7S1tre4ubrCw8TFxsfIycrS09TV1tfY2dri4+Tl5ufo6ery8\/T19vf4+fr\/2gAMAwEAAhEDEQA\/AOD\/ABoApcGlFecd4m0HtTSg9BUoo+tAEQUf3RSFR\/dqTAoxQBCV9qjKj0\/WpyDzUbCmIgZaiK+5\/Op2BqJs0AQOp9TULZHc1Yk6dKgeqRJGfrTCfenGo2PFUgEz70bqaaTNMQ\/PrQGxTM+9ApiJQ1KGqOgUASZppamk0wtxQA9DmQVsIcqD6isaDmQn04rYhz5S\/SkxoeRxRilAzQBikA3HejHWnqOaMdaAIJl3xMvqKreXCVB3Ee2c1f28VlXI8qVx0HUU0BKUgx99s\/SmDbnC5Kj1qhLIzyCNWIHUkVchGFAHSnYVyzHwPrVuBf1qrCMtz0FXrdSWpMaJ7JNrNEf4eR9DV0dfaozFtaNlOGwQfpUqgYyakY5Bk04gZx2FKvyrnuafAnO49B0+tIB8a7F56nrSjk5NB5OKd0\/CgDGwexNGD6\/pS4pee1QWAB9R+VOGe7fpSLTxigBpz\/eFJhsfwmn8Gk2igCJg3+zUbBvRfzqfaPSo3X2oArup9B+dQPnn5f1qywqF6YipcTRwrulZY1zjLMBzVNr21z\/x8Q\/9\/B\/jS67Cs1ou9dyq4J5+o\/rTvHfhez0LT7a7sGaSOSTy3ErZ6gkEYx6H9K2hBSRjObiyIXEL\/clRu3DA0N9DWF4a09da1m3sCVh87d+8ClsYUt0z7V1+pfDyOy027uvt5k8iJ5dghxu2gnGd3tVeyZPtTJJHoabn61y2+L\/nk3\/ff\/1q9Hj+GsEsayR6qWRgGUiHqD\/wKqVMPaGDmjNZGtWh0bV7mxMkpMLYDg7cgjIOO3BrX8OeG9Q1+xe6s70RxpIYiJZGByAD2B45FP2YvaDwwx1pQR61U8S6Je+Hvs3229Z\/P3bfJdjjbjOc4\/vCoPDum3ev3slrZXsiSJGZSZWIGAQO2fUUuRjVRGiceophqXWPDms6NZzXVzcxtbx4BdSGzkgDAPPU1mWEk0jbpJRJGykj5QO+P8aTjYakmaVqOT65rahGI6x7MZdR71tKKzZohw6UEcUoHBpaQxBSkc0DilPtQITFZWtKREJB24Na55qvfQia2kTjkd+1CA560XILHqavRmqlvHIifOjrnpkYq5brk4q2Si5AuEJ9a09Ojz8x6CqO3CD1Y4rZiTyoFXuRzUMpC9WJ9adGMn2FNA4qQDamO5qRjl+dv89KnxgYH5VUvrtNOs2mkUsx4VR3PYe1O0y8W9tEnHG4dPSnbqF+haHy59e9A7k8AUg+Y0123ttH3QevqaQGWMnuPypwHuKQL9acBUFiYI7ilyfalx7UYI7UAJk+gpAT6D86dSY9aAEJPpTCx9P1qTFIQKAK7HPY1A49jVplqF1oEZ97H5ttKm0klTj69qzdI1SbVtZsNG1ydZ9K3hViKBcHYQg3KA2ckDrW2y1c8G6bZXlpqVvLbRrdxSHZc+WPMjDD5SrdQRgkV0UHrYxrLS5eu\/COmabDLqGk20sV7axtLCFlZgzgEgEEnOemK49viTq7KQ1rp5B4IMb8\/wDj9c\/D4k1qEkpqt4SePnlLfzzXqVp4R8OX9pBeJpu1biNZQPNcYDDPQNiuk5ykPhtoxAIur8g9\/MT\/AOIrn7nxxqWjXM2l2sFm9vYubaNpEYsVQ7QSQwGcDsBVPVvFet6bql5Y2d6Yra2meGJDEjbUViFGSCTwByea6rwv4d0jXtEt9T1Ky829uWd5pPNddzb2BOAQBnHYUAVrHwzbeMNPTXL6aaC+u871hx5Y2koMAgnoo79ajl1WP4fOdKit2vlm\/wBK8xpPLIz8u3GDn7mc+9ZXiPXNR8N6zc6Totx9m0+32+VFsV9u5Qx5YEnlieT3rV8NaXF410yS\/wBellku4pDbrJGQmEADDgDGcue1ADmtpPiNbR3Rb+zYrN2iVcedvJCknPy47VXMSfDiZZSP7TkvVKA\/6nywpBP97Odw9OlN1fUpvANyul6Osc9vMguWa6BZgxJUgFSoxhB29an0eNviFFJJrYMCWR2wm0+XcX+9ndu6bV6Y60AINVPxBB0kRHThF\/pJl3+buA+XbjC\/385z2rlr\/Sfsr3FpI+82rMgcDGeTk4rpdajT4ey28mjKJ5L1XV2u\/mKhdvC7duM7uc56Cse7kkna9nm275ZHc7enNRN2Lgrh4ad5oUaQ5IyMnviulgUM7ZzgCud8JLmzB+v8zXT2q\/IxzkE1zT3Z0Q2HeSvbNJ5A96mFKKi5div5A9TThD71NSGi4WI\/J9x+VI0YVSWPH0qXFUNZuxaWhYYLngD1P+f5U0LQdBHuQc1J9lyc\/Ln1xXPWuo3byY8zAPYKK2rUyyYBdiT71VmK6ZbhtC08ZJyqnJGOv+eKt8tI6v1VsH+n6VYs4di49P50l0m2dH7ONp+o5H9aQCRrhSTSpgbpJCAi8knpT1UucCsHxZqPlILGAkMQDIwPQf3fx6\/T60RV3YG7K5l61fm+uy4\/1KfKnXkev4\/4VY8MXZiuWtmPyyfMv17j+v51kKdygUod4pFkiOHQ7l+vpW7jpYxT1uegyNj92nU9T6ChF2jAFVNKuEubVJUOdwyauj0rnNjJVfUtn604L\/tNTyMGhcGoLECn+81AB\/vt+lP\/AM9aXcO5\/WgYza399vyFJsP94n8KkBHb+dFIBgQ+v6UhU\/5FSYpMUAQEHHb8v\/r1E6t2I\/L\/AOvVsrmo2XimIoOG9V\/Kuc1rSrnUdQigsovNuJRlRuC5wDnknHQCuqkWs68upNNuLW\/hQu9u\/wBzpuBHIz2z0\/Grpu0jOorxOisPE2maPYWmnaxcNa39tDHHLEyM5BCjuoIORg9e9cRq\/hq+1rVLrUtBgN1p1zI0kcpdU3En5uGIIw24cjtWlBpMHj+5udTimGmzIVjlh2+cWwOHzlcZHGMfw1bk1WX4fwxaW8LalFJmZJi3lBcnBQDDdCM9f4q7jkNbwtqNlo2h2ula1dQ219FvWSGVhwC7EZPTGCO9cl4mOqyeIbybw297JYNsCvp7M0eQgyMpxnOePetIaUvxCZtVEw04xf6MYtvnbsfNuzlf72MY7VPDqUHw+U6VMst80x+1CRFEYAPy4wSf7n60ATeFP7P\/ALK\/4qyK0TUvMPzamqiZ04wfn+YjqAfbHasrxd9s\/tKP\/hD\/ALR\/Z\/kjf\/ZefK8zc2c+Xxuxt98Y9qfqem3Hj6dNU0sw28MSC2ZLliG3AliRtB4w4\/WrekanD4Btm0vWFkmuJnNyrWoDKFICgEsVOcoe3pQBJ4Q+x\/2bL\/wmH2f+0POOz+1Meb5WBjHmc7c7vbOfesvxm91FfRt4TaZNNEIMjaYSIvM3NnJj43Y29ecYqbV9Mn8e3K6po7RwW8SC2K3RKsWBLEgKGGMOO\/rUmg63aeCIrrR9TWea7WbzWa3UMg3IuACxB6AdqAJ\/D9p\/bnhe8uPEaSXNzavIYvPLKUGxT2wcE\/yrnMFbLBySQTn681reI7KfxFt8SxvGmmJFsjjckS\/KxHIAI++T36flWfOgSFUBzgYrKozWmtybwkmNJRj3LfzNdPCm2FQeDjJ+tc\/4YjxotspH3s\/kWNdKBwa56m7N6exHjilAp4XjFOC1BZGR2pACTUoXIJNIwwKAI+gJ7VyGv3P2i92Kflj4\/H\/P9a6bVLgW1o7fxY4+tcbboZJctkknJJ71cF1Il2L2mwEkV1mm2+1QSOay9JtckcV09tFhabYJEka4XFNuo99uwHUfMPqKmxgcVFO4UEMQFXlielSMp6jdrY2jykfO3youM89q4O5LSSSO5y7EsT6k1p63eNd3m8H90vyoM9vX6n\/Csx8itoKxjJ3I4D1FSE5qIcE4p46VZJteGLvyp3tnPyt8yf1H9fzrrl6V51E7RSLIn30O4e\/tXeafcLc20bocggGspq2prB6WICOCTTQoFSkZIApCozWBsNGOxNOApFU\/3j9MCnBfVj+lIBMYpwHoaNvoT+lAB9T+lACgHu1H5UBT6\/pQQR9KAEx9KjdR6VLSMpPp+VAFR4xjpWdqlvvsZwOCF3D8Of6VsFG9vyqJo2I6j8qadhNXMvWpAmlWc\/hJ44tRkCfarXT1BYjb1ZFyQFPHT+KodEDaq0i+PYZliiUfZZbsG3QE\/eXd8uWOFPOT8p96boGjyae954hhmErae0itakbRIqpgndzjg5xg8im3Ovr46mtNFNqbEvKZRP5nmYKoxxtwM5+tehF3VzhasWNaf+yBAngBvM83cboWn+lYxjZnO7b1b0z+FM0SGLVpribx9GIp1VEtnuybUsuWLAAbQ2CR\/wB9VINLb4eq2qiY6is3+jGHb5O3Pzbs5b+7jGO9QtOnxGuY4Cf7NkskZ1H+u8wMVB\/u4xgevWmINXuL7SroW\/gTfJppQSS\/ZU+0qJSSDliGwdoXjP8AOrOjw2GrWzz+OmjTU1cpGLqT7M3lYBHygrkbi\/OPX0pDI3w4iWI41JL5iw\/5Y+WUxn+9nO4emMUz+y\/+Fh\/8Tbzv7O8n\/RfK2+dnHzbs5X+\/jGO1AGfq+q6jo2ozWfhVmTSk2tGYYxMrEqCSGIOeTjr2re0fw3Z+J9Li1bWBN\/aFxuErI2wZUlBxjjhRVH\/hKP8AhDP+JB9j+2\/ZP+W\/meXu3\/P93Bxjdjr2pt74MvPEc41j7bDEL1EmEbKSUBUYXPfAwM0AZz6rJF9q8MxKq6fazMiMcmR8S87j06kngDtTNS3CJtv3tpI+uDV6LXbfVrDStPt0lBsgqNvwA+1MBhg+x\/Oql+xE0gxzGpbH4CsJu8rG1Ne7c2NAjxp1gBx+5Vv0\/wDr1rgHpUWnQLDCsSdI1VBn2H\/6qthcVzyd2dEVZDAuKdjAPqaUkehpN3+yf0pDDGBUZ5NPLnJ+RvzH+NVrycQWzuylQB1yP8aAOf1+4865ES\/dTk\/Xt\/n3qvp1vl8+9RKGlkZ2+8xya6DSbTpkVotEZ7mpplttQeprYRMDio7WIKlWOgNSUQStsXPfoK5zXb0qfskRO48yH29K1tXuPs0IlGN\/IVT\/AJ\/GuNYnzS7nLMcknuc1cUTJ9COZCVPHPWonUeX71bYbgdv0qvIm0FWrVGTKu2kHpUxHWowMNTEOUYra8NXLLK1pnCn5lPt3H5\/zrGFOilaCWOdPvRnd9R3H5VLV0VF2O1A60AZH1OKdjtSgc\/SuU6RjDGT6UAn0pzjoPxpCMZNIBfy\/OjFA+hpdvtQAqinAe9NUEetPBx\/+qkAmP85pCB6frTtw\/wAilDCgCEr7Gmkf7J\/Spjg9KTH+cUAclqGg3uo+J0OmyQRTxoLlTNkAYIHYHuM1rap410zUYLjSxb3kF1NmBHmVVWKQ5AZiGJGD1IHaovE9teSPZf2dcNa3EsgtxIrsh+YjGSvOODUc+saFozjT9d0iO51OBFE88dvHIJGKg7tzYYk5ySR1J69a7qLvA46qtJlWDw7qHh+Uapr88V9ptvnzYEdpS24FR8rAA4LA8npmpvtdn4kH2PwdB\/ZN+n76SbYIN0Y4K7o8k8spx049qhstF8QfZLfU77VWu9LCLdS27XEjmWLG4rtIwSV4wTiphq+la1nTvC9m+marPxHcLGsAAX5mBZCWwQp4x1xWpmH\/ACLH\/I6f8Tj7T\/x7f8vHlbfv\/wCsxjO5enXHPQUfZLzxJ\/png+4\/snT0\/dPBvMG6QcltseQeGUZ68ewpwibwzE0vjT\/icLMQtvz9o8ojO7\/WYxn5enpQqX+uK194KcadYp+5ktziLdIOS21cr0KjOc8UAN\/tbR9D\/wCJd4lsP7R1aH\/XXPkpNvz8y\/O5DHClRyO2Kg1LR\/EawzajZanJBpbBp44kuJE8iH7wXZ0GFwMDOMYqWO+0C1UweKoPtWsxkrcS7C2454574XaPwpbkeK7GKP8At24iOi5WO7KiPiIkKw4AbkHHHNAFHWfs2t3CyeFLcQLEg3+XGIcnPt3wahsbGaPUIllmd5GZQwk5JIOTz6YBrqPDUVgG1ObREA075BETu5IBLfe56nvTYYlEk0hUFgflOORx2rmlN3aOiEFa5et1\/dkkYJ\/\/AFVKBxTkTaiqOwxS49K5zcZtp23tTlXnJpcdaAGheK5zxHcbpFt0PA5aujmby4WY9hxXHyBprp3bqTVRQmO063LydOBXW6fbBVHFZ2kWmCpxXSxQ7V6YNU2JCouBTXKqpLEBVGWJqVhtHv2rJ1aXdG0IPBByfU0kribsZWoym5lYnO3oB6ViXMRC\/Q1sNEwgSRuhxVW7UEE446VqvIzKMJG0+oqKZdzE9qb9yU45B6VNkEYqkIpOCvNVyeTmr0y5BxVZ0+U00SOQbvpTmGBx2pIGymO4p5pDO2Uc09F7+vNG39aevC1yHUQgZkJ9Bj\/P6UpHYU9F4z\/OkHWgCPABIpRjnipSgIJqMfQ5oAOKXj1oyfSlGfSkAgH404LSinBT60AMwPSlAH+RTwv+c0uMdqAMvxBCz6TO0RZZYwJEcZBUqc5B7HGayIZbLw7YRP4rtk1e4vXMsNyqLOSgVAATJhvf05rqpI1kiZHTcjgqQe4rmvDOk6voF1dyW72UqXIG5HLdQTg5A9z+db0KijdMxqwcndFWLR9c1uNr\/QtWkttKnZvIt5bh0MagkbdqgqACCAAemKS71zRdRQWOgWB03VZ5EjgufISHy2LAH5kJYZGRwO9L4k8ManrupG9drGBygVgjMd2O5yOuMD8K6Ty9Sbw5\/ZX2e0z9k+y+b9ob+5t3Y2fjjNb+2h3MfZT7HP8A2O78Nn7b4xnGrWD\/ALmOHcZysh5DYkwBwrDI55o+yXniT\/TPB9x\/ZOnp+6eDeYN0g5LbY8g8Moz149hU\/g\/wzqXh\/UpbvdZ3G+IxbDKyYyQc52H+7T\/FvhXVPEWoxXW6ytwkQi2eaz5wWOc7B6\/pT9rDuL2UuxqQadbJbxR6hp+n3N2iKk0zwh2kcDBYseTk9zVW30cRzK1zqGoX0I+9b3k3mxP6blI5weR7gVe07SdVtbG3t\/KsW8mNY932hhnAxnGz2qz9g1X\/AJ4WP\/gS3\/xuvCnLG87cXp6o+cqYfNnNuN7X7x\/zIvD9usemXzJGiRSTytGsa4UKPlwOwHy1BHH84A4y2a3dD01rDR4LSZld0UhmXoSSScfnWZDGfNJwMKP1\/wA5r0m9Wz62KskhwFPVMmngEHt+VPGcdqkshCGgripsHBprnZGzEdKBEHkmbzMj5EU\/iT\/n9a5+2td903HANdh5Yh08\/wB4ruJ9Say9Jtd\/z46niqT0EXdNtdoBx0\/nWiVwKlii2LtHaorllVW3EBFGWJ9KBFVjvkCAjcw4HfHc\/wCfasTXYjbSqgzsK8ZOaLDUjNrSSksImby1U9geP581oeJow9urD7yHJ+hq0rEPUzYQJ7IL1FZM4\/dMvcVasHdUZBUV5Htc46ntVITMS5GT8tJGdwBqxOm3cCOlQKduB61SEK3T1qGRSAatbTioZhgH1FNElSFgrn0NSE5NQkYJqVeRmqYkehbeaRh8uPXipgML7mmgfN9BXEdZGRwaULz9BUhXgUsa9+evWgBpX5cc+majdasMMCmMvBzQBAFGOaXApDkHuAf0ppNICQGnZPpUQP1qRT\/k0AOB9qO\/SgEetH0NAxy09Rnp\/Ooh+NSoaBEqJ61KqCmq3FPVqYE0a+1TKGH8P61FGw7mpPNX1FAiUAgfd\/WlH0\/Wo\/OHPzU0zj1piLS\/QfnWBAn3jjBJxn1Fav2gDvVYIvJDrySeT70DRCF60uzpUuEAOXT\/AL6FOXYOfMj\/AO+xSsMiMdVLy5t7aeFblyo+9nBPTp0rUVVcEoyMB6MDTF06GT554llkbrlQcCmIp3l5DPpcrwyI5VOitk88DI7ZrQ021EMSDHKjH41Cmg2AlVlgG5WDD5jgEHPrWyse1cCmhMgk+RT9K5HxRfneLONh1Bl479QP8+1dFrF6trAXBBcnbGM9T3P0H+etef3KkStuJZixyT1J9auK6kNiwlg5xxjnNb8139ps1B5Yj5jjv3rDsWBmCnqeK1o4tqSHrVsSM+3cR3JHZv51PeqGww69apTDady9c9avIPOiyO4oJMdgXZs96oSDa3PXNatxEY3PpVG4jDKT3xTQCI+VA\/Omuu7iiA5SpkjDAnPNUIy3XBNEJw2KnuF5J9arkYGR2qidj04rnpTUXjPrzUzDCn3pQuDgcAVxHURFaQD58YqbbnJoROpI5NAxm3Jpsi\/LjpnjNSqvtmldeQB0oAoyLkEZ5FVc44O4GtB15bsPWs68PlkkZwPSnYQ8N9aUH61RFyMfxflSfalHUmiwzQBp24VmG\/iXq1RHVrcHl1H1NFgNkOPWnCQeprnpNdtV\/wCWq\/gaiTX4JG2x7nP+yCf5U+Vi5kdQJcdGNPE+B96uTbWmzhLa5P8AwA0xtSvC2EtHOemXA\/rRyhc7AXI\/vUfal7sK483t8Yyxjhi\/35P8BVU31ySfMu7VB\/svn\/Cmoiudw14o7imG+QfxVxc89ysrRm9JKnBCx\/8A16hnkG3LTXjH\/ZKinyhc7dtQGOG\/Wq8uqBQcsB9TXKlIFiiEn2uVpFDhS5zz9CBURW2jJYafOx\/2iD\/M0JBc6GXWkbhZUyTgDdUMusqWEccqFugG7JrGT7N9nWRrRQWYjBQZFC3KPIqKpX8KEgueiaJ80A5zXRW8RELMACxHFYXhWJpYIx2YAn2FdZ5eAABjHFSwKMaYJNLKCVKrwT+lWXQL\/wDWrJ\/tVD4hi09NpGxmdv8Aa7KPwz+Y96EibnIeJXmTxA0UhJjCBY17Doazr9WSclh1B\/lXW+NbQSSWdwAA2\/aT+H\/6q57WY8iLAxxya1QulzIt2McoOOQa62yhW5tZMHBK5rkO+fauj0a88qAnvjFDEjDkyvmRt2Yir+jHzIypPSql8M3LsOAeadp0nkSc8KR1piJr+PG4nqKxbkcV0F0A8Tg9e1YE5ByO4oQXKkTbXIqcMQDg9agkXA3jqKnQhlqhEM\/I9agccVcdciqk6FQR7ZFUiWenhdzD25\/z+tPx1pUHDH8KfjgfnXEdIwL8pxTgmFwPpUm3kDGalCdPzpgVtntTWTnPbHWrJXimFPlbsaEBUK8ZHr3rG1LhGrekGAR6CsHWhthb34qkBz2XKnk1A0C8l2lb\/gR\/xq6FqKQYp3AznggBz5DHHq5pqiMpO5tIgqJkZUdc1PNJtONkh\/3VyKiDs2n3oCMpwoG4fWqsybojt7iRwVjhEaD+6pxn04qe2klLzFiQEiZvukdveo7R4UjZZc7s54z0p8ckTC78sMD5Dcn6inYSZmpdXE6lzK6j0BI\/lUmm+ZJqluGldvmzyxPT8ahgTEZBx1qzo4H9rQcf3v8A0E1bXukJ6lVJHkfDyYA55FJOFwf3gP4VNbDKBSSo2gggUy4TCn96x+oFNCZozc313uaTiQ42k+p9Krz7dp4mP\/An\/wAK0J4JWvbkxIjAuSd31NQS2tyVIEcf4D\/61SnoUx+ySR7Jk3bFt1zz05Yf0qSWN9p5f8\/\/AK9Ph+0Qi2XylGYgHLAnGGbp+dTySPtOAo\/4BSGU0BOnupzlZB1+hqoibbhfc1qWS+bbXQbBKlTwMe3+NQNFiWMerUu6KPVPA0QbTY39Rj8q6byyzAg4AOfrWD8Po\/8AiSxqeuSP1rqXgB+U5AyDke3NZiZzXiTUU023DEjzZDsjXI6+v0H+etec2ly0GtW9wzscXAZiTknJ55\/Oug+Jiumr20gH7ow7V+oY5\/mK5a4wQjDrjNaRWgHpPiuHOlswXc0TBx+BrlNehH2ZZBnoK7nYLzRlGcmSEHP4VyUiedpARhymVP4ZFJ9xR2scmceX05qxbyBQFU9aRYiQ+eCOMVAh2yA1ZJLcBnJGMnNOt1Dwsp+8OKklADhhyCKrRSbZ2PQE4NAy3FKXjweo4rLuk2sTjGa01X957VWv1BbPoMU0SZUgOCO9LEMDHfvT26ilTvTAei9ciqtyvOMdKtu4Iwp59arSLxQhHpyr8oHepFHzn8qBwCfSpI1yOa5DoGouZDnHH+f8KsIu5jTY06njnnj9KmQYUk\/WmIi2DknoOTTTHhcdas7eO2aQp+goAzpo\/lbiub17ICrjqa7CSP5M4rkPECkXCL25OKpDRjY4qvL3q044qnO2ASegoGVniJycv+A\/+vQg2abJwTmYDkfSoZrzk7Qceu5f8KuQBW0mBm6yOx\/EH2q9UQrMrW9sbicQopZ34UZx9cmprrTZdNtr1plG4xgDDE9+RyB7VJavJaXMdxBt8xDkbhkVeubmXVIrrzYwm4AADP1NFwsclJuUkDdj2FP0Zn\/tWIknAV+o\/wBg+1XJ7d\/MbbGxHtS6Tbyf2rEPLbJV+M\/7DVo\/hM0tSFoWCIAP4R2qrcxOEOf5V0F3pkkzxiMxghejMufwBqnc6NcKhzg\/7q7v5UJqwNam3NAyySMnGSTVGdrmMEq+MewrpXiiyRuDD1Cnn35Gap3NkJQQhH41ipGziP1K2WOW0LjO6EcEZzkKf8apSxRYP7of98Cuh1GNdQhtEtkdpkgWJkI6sABxjPHXtVQeFtSdf3llOjeiwu39BQmuorGNpEKvJexxqB+7DHAx0P8A9epBaE3lsuPvSKB+JxXTeH\/CGp209zKlszpLEYmWVPLxyDkZYc8Vek8OT21xA9wscLo6snmTxgEg5Hehy10BbHUeDLPyLGVcfdlYfkas6hqKpNLbWg8284XGMKp64J+mT+Bqaxng0O2ZNauoIri4maYImTwfbqBnI\/DrXOeI9bjbV4rq2lRre2R2X5SGYlMYH480JEdTnfiAjy2tnLIwLROyMPdhn\/2WuSxuhQ568Vt6lenUtIuJZMgxurLj64\/kawwSIwO3WrjsNnqHhOfz\/D9oSclV8s\/hxWRKghu763PALbwPY\/8A181L4Al3afPD3jfcPof\/AK9M8Q5h1eGTGBKhUn3B\/wDr0NCW5y0qbLuRSMgHrVK6i2LvyCCeK078EXQY8BjVK8Ugbe3pTQiOP54Sc9KhnjxzT7c7CQT1FSTAlDTDoLpzgRurHJ9abcxlkJAPrUFsSs209DWhCcq64zgUyTGlTDHFVi56DpVqZMbh3FQHBBoAF7Gmv8x4oU8GpVFNAeoFegqSNflODg9B9aaBkk+lWIV24\/OuQ2HhOOPXipFTjpTgMYHoOakROBxTERhD6DmlIODj6CpFUbicHilCcDK96AIJo+D7da4jxAo\/tFwAcqoB+vX+or0Er8pzS6F4ZtdX16RrtC0CRbmVcDc3AAPfoD0IouNHkxgmlJ2I2M9cE0R6TPLJhdufSRcL+ZI\/nX0Rb+CdDi\/5cI3\/AN\/mrA8KaMPu6bbf98CqSYnNHzzHoVwEPmixLeqzIv8ANzVxPDf2mGBZLzT4fJJIUzqCc+u3Ir3seF9LHTT7X\/v0P8KX\/hGNL\/6B9r\/35X\/CqtJkqaR4F\/YEEcuyTULMDuU8x\/5Lj9a0E0TTIom8vWGIOCUW2bk8+px3P517lF4fsYl2x2kCL6LGB\/SrI09QMCjkYc58+x6LoDsWvVupz1BW3jXH5satSWekoFFpHfEDH+sdFwPoFPaveP7PU9z+dAsFHr+dHIw5zxNZNIC4\/sUsfVrp+f0pLeaCGQvFpdiPQSb5B+RbFe3CyHv+dPvLRUsty5DZ60ezDnPIG8+4wsGjWqMenl2YJ\/UGrdt\/b8MYjht540HRUtAAP\/Ha7a3MjXJUu+Pqa24IflzR7PzDnXY8seDXZJTIY75XZVVikbJuwMZOB1oNjrUqFZF1FlPUEOc16XqMX7pvpXHXsXLcU1TuHP2MS1ifTJlGpCaKGOzniiEiH5d+ecY7njPsK5i5mN1xAnyg85PJrvrixlvDplvZxp5rJKhQEKFVpJcgZ4+63A965k6UbK9EqTW5tVOW5O7H0\/w5FS423KUr7GM8M97MzSs0szdWYkk\/U1FJpt1GpUxuyjuFNemaf4ce8tkubOeCS3lAZW+YHH0I\/rUknha4EMtuupfu25ZRAoGeuM9f\/rU7MnmR5fp9gz6VqS+WT8jNjHQhc4\/OubWM+SZMfKDivcrDw+umwGLzTKc5GR90YA2j24\/WvKbXT28q8s5VCzRbgw64YcH9RTTsNal7wJKI9Tmh3cSxgj6j\/wDXWv4vgJit5h\/DJj8+K5nw5L5GqWEvGC3lk\/Wu38QQGfS7hVGWX51+oqiXucLqaExqecqaq3S5i3dc4rav4d1sXI+RsY\/KqCqJbNemQMGkhsy7vy\/MVoRgYGR6HFSeWTESajuoyJOPSrUDAwYPpVCMzGGHqKtwnIJB61XuBtc47VYtCCuO9AipeoQ+exFUguCa2L+INDvB5FZLZzzTEM2\/P7VKexppz5YNNQkqRQB6sg4+pq3GOfpjjH41BCvzZqzb\/MvfHXn3rmNiRVy2KnRQA2B7UyMZOev0qfaRH8vXtmgRGq5QHPXoamVcj8KQrwAOlTqNoOB06E0CIQgrqfANsMahcKcq7qg+oGT\/ADrnQPlzjP8An\/61dr4IhVNCWQDBmkZ2+udv9KqCuwk7I2QlLsqXFGK3SMbkWyl2ipMUAUxXI9lG0VJijFAEe2k21LihMFsGgCHbzTb4f6EfrT5SFLegqrezKbQjIzmkNHO2v\/H2a6O3X5K5y0\/4+zXTW33BTGyrfpmNq5G9i5eu0vBlDXK3q\/M1OIdCER7LzTZIjhzfRKSP7uyDI\/8AHm\/OuZ162W3u723TJWKV0BPoGIrfkla0tY52XKW8y3WfqAAP\/IJrO8VwNFrOopIMEys4+jHI\/QisKmrZpTVjoPhxI0nhK2Un51Z0+gDkD9K2yhWMg4Jyen1Ncz8J3Z9Jvoj0iumA+hVT\/U11bo7GQA\/Lng+g9PzzVLYzl8TMq4ySVQAt3J6D614\/q6nTPFGoJI+4NKzMfUON4\/mK9qlQIpVRXkHxHtkh8SyOuSZoEmb2IJX+SilYuD1OUiJVWKZCxSbh69c16bGUntVbOUljz+Yrg9EiWdpk2j7w5+v\/AOquz0Qs2kxK5+aIGP8AI4qhsxXtC+k3MXQrkD8D0\/SsGJcQkL1967ODCfaY3wAGDg\/X\/wDVXNPAqXMiKfl7UgRjyICxz6VSjYjKZrSkQM2DxmqNzF5MwPTNUhMjdM0yEeW+Ksds1FKMSK2eKAZLOu+Bu5xWVKoA3fnWwoyoxzkVmXKYZ0\/KhElLJyR2pkZKk09vlY+tCgHd60wPXQPkI5+bjirKghT69qjRfnXg4HNWVXOBXMajoxgd\/TirBGQOD1piL0596lUfPgE8D\/P8qYgQfvAKm4IHJbJqNeNxHJqUZyBxxSASUERNggEDINej6HCYdHso2XawiXcPfHP6151JH57xQA4eVwq\/Un\/69epqMAAdhWlJasiewUlLRW5kNpcUtAoATFAFOxQBQMhnbbkVHGDuJNLMD5n41IBgUhjboA2r4+8a5+e3kWIuSSM4rffHQ1XvlH2M8d6ARzNp\/wAfVdPbfcFcxbf8fVdPa\/cFA2JdD5DXL3w+Zq6q5HyGuZvx87VSEZ15tl0i5jA+6sKH35uD\/UVX8agSa9dOvIZUIPtsWrRhVrWZznPlufqVeMD9JG\/Oq+vxhYNIP8bafDvPqcEZ\/Ssaqt\/XqXTY34VsftusWxOEVo5MeuQR\/wCy13sqnbyMH0Fee\/DuZYPFF\/CeDLbq+T\/stj\/2avQpC7542D1PXH0oh8JNT4jLv5FhVi2TgZwoySK80+I9uz3unSmMBnSWIsPYAgE\/ia9QmQKTgc9yeSa4H4lRSv4fhnC7PJuEkkBP3QQV\/mwoY47nnOiSYvlAP3wMj6Gu30YhXvIx0LbwPqP8a86sJjBqETH7u\/afoTXf6c+L49AJE7ex\/wDr0FvYz9TnaK8YDOGUqD6\/5xWfJlsOO9bGtRAfOcgcnP0rMVQ6hfyoY0ZUi4kb1qpqpDxq46jrWldRlZTms6+T5HTr3FNA0V4\/mjGPSo5Bx9KLRsqy56U9h1oJRJbgBQfQ4NQXsYD7+1SwN1HrUtwgeAg9ccUyTnbniQkdKYoBXNTXCkL06Gq4PUdjTGe0wrkscegq0i8k+nFRQJ8oyOepHv3qygwp\/P61zmgoHFSxjkkmmoOeelSJny+RyeoFAhoGcA8ZNSqvJPU0qDnjpT8YB7UgLGjxifXLCJl+Xfvz7qCf6V6OK4fwfGX152blY4SQfQkgf413AraktDOoFJS0VqZiUooFKKAAUtApQKAGsgIYnsKhGGwTwKsEcVXuPkxjvSGilcTBcu3Axiqd1qCPblFzmrGrJuhAHQ+lZUtkUtw\/PXFJFIp2x\/0quotfuVy1qMXArqbT7gpgx8\/3DXNagPnaumm+6a5zUR85qkIy1lOJYsEq0TquPXdGx\/SM\/lUOq5n0jSLluCY3gx7RuRn8jV21x8\/PO58D\/t3mqrfkN4e0wIc+VLOrc9CWDY\/I1jU3ZcehkeE2WDxzbbgN0kMka\/Xhv6GvU5h3ryKwkEPi\/R5iCcTFcD\/aUj+tetzCV1GSsY\/2eT+Z\/wAKKewqm5Quyqjc7AL6k4rjPGyi88M6jEobIQybwOMI27v7LXXX8aRpvKl2yBk\/MRk4rL1K2jurSa3lH7uVGjbnnBGDQxRPnl8newz0DV3GlXAIs5QScnBP1BH8640RM4QA\/f8Al5\/l\/Kuk0N92iwuv\/LNsEn1BzQzU6HWYfMtTu9c\/nxXN2rsxjLD5sfMPQjqK667XzbLdjOUzXF3iyWUk\/wApBWTzR7q3JP6n8qGKLJL0byXHTtWZMvRm+h\/GtBJxcQfKOOtVZo98br7UIoxWAiuSo6Zq5sFQ39uUjSQc5yKlgbMSk9CKolEI+WSrRORjjFVpeGyKmXlQRQSzLukxI64461m4wx9DW1fL\/EKy5FAfpTQH\/9k=\",\"available\":[{\"seller\":\"foot locker ca\",\"date\":\"2022-08-03\",\"size\":\"10\",\"price\":\"1000\",\"isSold\":true,\"priceSold\":\"1123\"},{\"seller\":\"foot locker ca\",\"date\":\"2022-08-04\",\"size\":\"9\",\"price\":\"1000\",\"isSold\":true,\"priceSold\":\"1123\"},{\"seller\":\"champs ca\",\"date\":\"2022-08-05\",\"size\":\"11\",\"price\":\"1000\",\"isSold\":true,\"priceSold\":\"3223\"}]}"
+    
 
     const newUserTestingCredential = {
         'name': 'pp123@gmail.com',
@@ -23,7 +26,6 @@ describe("Automated Testing API", () => {
         ...newUserTestingCredential,
         'data': []
     }
-    
 
 
     it("POST /adduser will fail if all fields are not provided", (done) => {
@@ -84,73 +86,213 @@ describe("Automated Testing API", () => {
 
     })
 
-    /**
-     * Test get userID
-     */
-     it("GET /getdata/info", (done) => {
-        if(!isAuthenticated){
-            throw console.error("User is not authenticated!!!");
-        }
+    describe("Automated Testing API requests on authenticated endpoint", () => {
+        beforeEach(function() {
+            if(!isAuthenticated){
+                throw console.error("User is not authenticated!!!");
+            }
+        })
 
-        if(!accessToken){
-            throw console.error("No Access Token!!!");
-        }
+        /**
+         * Test get userID
+         */
+        it("GET /getdata/info", (done) => {
+            if(!accessToken){
+                throw console.error("No Access Token!!!");
+            }
 
-        chai.request(server)
-            .get('/getdata/info')
-            .set('authorization', `Bearer ${accessToken}` )
-            .end(function(error,res) {
-                res.should.have.status(200)
+            chai.request(server)
+                .get('/getdata/info')
+                .set('authorization', `Bearer ${accessToken}` )
+                .end(function(error,res) {
+                    res.should.have.status(200)
 
-                const result = JSON.parse(res.body)
-                result.should.have.property("success").eq(true)
-                result.should.have.nested.property("msg.userID").not.eq(null)
-                doHaveUserID = true
-                userTestingID = result.msg.userID
-                done()
-            })
-    })
+                    const result = JSON.parse(res.body)
+                    result.should.have.property("success").eq(true)
+                    result.should.have.nested.property("msg.userID").not.eq(null)
+                    doHaveUserID = true
+                    userTestingID = result.msg.userID
+                    done()
+                })
+        })
     
-    /**
-     * Test get sneakers
-     */
-    it("GET /getdata/sneaker", (done) => {
-        if(!isAuthenticated){
-            throw console.error("User is not authenticated!!!");
-        }
+        /**
+         * Test add sneakers
+         */
+        it("POST /updatedata/addsneaker", (done) => {
 
-        if(!doHaveUserID){
-            throw console.error("UserID is not existed!!!");
-        }
+            if(!doHaveUserID){
+                throw console.error("UserID is not existed!!!");
+            }
 
-        chai.request(server)
-            .post('/updatedata/addsneaker')
-            .set('authorization', `Bearer ${accessToken}` )
-            .send({"userID": userTestingID, "newSneaker": newSneakerDataTesting})
-            .end(function(err,response) {
-                response.should.have.status(200)
+            chai.request(server)
+                .post('/updatedata/addsneaker')
+                .set('authorization', `Bearer ${accessToken}` )
+                .send({"userID": userTestingID, "newSneaker": JSON.stringify(dataTest.newSneakerDataTest)})
+                .end(function(err,response) {
+                    response.should.have.status(200)
 
-                const result = JSON.parse(response.body)
-                result.should.have.property('success').eq(true)
-                done()
-            })
+                    const result = JSON.parse(response.body)
+                    result.should.have.property('success').eq(true)
+                    result.should.have.nested.property("msg.data[0].id").not.eq(null)
+                    doHaveSneakerID = true
+                    sneakerUpdateID = result.msg.data[0].id
+                    done()
+                })
+        })
+
+        /**
+         * Test add new sneaker
+         */
+         it("POST /updatedata/addsneaker one more", (done) => {
+
+            if(!doHaveUserID){
+                throw console.error("UserID is not existed!!!");
+            }
+
+            chai.request(server)
+                .post('/updatedata/addsneaker')
+                .set('authorization', `Bearer ${accessToken}` )
+                .send({"userID": userTestingID, "newSneaker": JSON.stringify(dataTest.addNewSneakerDataTest)})
+                .end(function(err,response) {
+                    response.should.have.status(200)
+
+                    const result = JSON.parse(response.body)
+                    result.should.have.property('success').eq(true)
+                    result.should.have.nested.property("msg.data").length.not.eq(0)
+                    done()
+                })
+        })
+
+        /**
+         * Test get sneakers
+         */
+         it("GET /getdata/sneaker", (done) => {
+            
+            chai.request(server)
+                .get('/getdata/sneaker')
+                .set('authorization', `Bearer ${accessToken}` )
+                .end(function(error,res) {
+                    res.should.have.status(200)
+
+                    const result = JSON.parse(res.body)
+                    result.should.have.property("success").eq(true)
+                    done()
+                })
+        })
+
+        /**
+         * Test update sneakers
+         */
+        it("POST /updatedata/updatesneaker", (done) => {
+            if(!doHaveUserID){
+                throw console.error("UserID is not existed!!!");
+            }
+
+            if(!doHaveSneakerID){
+                throw console.error("sneakerID is not found!!!")
+            }
+
+            chai.request(server)
+                .post('/updatedata/updatesneaker')
+                .set('authorization', `Bearer ${accessToken}` )
+                .send({
+                    'userID': userTestingID,
+                    'sneakerID': sneakerUpdateID,
+                    'updateStockInfo': JSON.stringify(dataTest.updateSneakerDataTest)
+                })
+                .end(function(err, res) {
+                    res.should.have.status(200)
+
+                    const result = JSON.parse(res.body)
+                    result.should.have.property('success').eq(true)
+                    done()
+                })
+        })
+
+
+        /**
+         * Test delete sneakers
+         */
+         it("POST /updatedata/removesneaker", (done) => {
+            if(!doHaveUserID){
+                throw console.error("UserID is not existed!!!");
+            }
+
+            if(!doHaveSneakerID){
+                throw console.error("sneakerID is not found!!!")
+            }
+
+            chai.request(server)
+                .post('/updatedata/removesneaker')
+                .set('authorization', `Bearer ${accessToken}` )
+                .send({
+                    'userID': userTestingID,
+                    'sneakerID': sneakerUpdateID,
+                })
+                .end(function(err, res) {
+                    res.should.have.status(200)
+
+                    const result = JSON.parse(res.body)
+                    result.should.have.property('success').eq(true)
+                    done()
+                })
+        })
+
+        /**
+         * Test refresh expired access token
+         */
+        it("POST /token ", (done) => {
+            if(!doHaveUserID){
+                throw console.error("UserID is not existed!!!");
+            }
+            
+            chai.request(server)
+                .post('/token')
+                .send({
+                    "userID": userTestingID
+                })
+                .end(function(err,response) {
+                    response.should.have.status(200)
+
+                    let result = JSON.parse(response.body)
+                    result.should.have.property('success').eq(true)
+                    // result.should.have.property('token').not.eq(null)
+                    done()
+                }) 
+
+        })
+
+        /**
+         * Test log out & delete refresh token
+         */
+         it("DELETE /logout ", (done) => {
+            if(!doHaveUserID){
+                throw console.error("UserID is not existed!!!");
+            }
+            
+            chai.request(server)
+                .delete('/logout')
+                .send({
+                    "userID": userTestingID
+                })
+                .end(function(err,response) {
+                    response.should.have.status(200)
+
+                    let result = JSON.parse(response.body)
+                    result.should.have.property('success').eq(true)
+                    // result.should.have.property('token').not.eq(null)
+                    done()
+                }) 
+
+        })
     })
 
-    /**
-     * Test authenticate users & get sneakers
-     */
+    
 
-    /**
-     * Test authenticate, authorize users & add sneakers
-     */
+    
 
-    /**
-     * Test authenticate, authorize users & update sneakers
-     */
-
-    /**
-     * Test authenticate, authorize users & delete sneakers
-     */
+    
 
     
 

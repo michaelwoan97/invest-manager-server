@@ -100,11 +100,11 @@ var functions = {
         for(let sneaker of data){
             if(sneaker.img != null && sneaker.img.length){
                 let sneakerImageFile = sneaker.img.split('//').join("////")
-                console.log(sneakerImageFile)
+                // console.log(sneakerImageFile)
                 await fs.promises.readFile(sneakerImageFile, "base64")
                 .then(function (result) {
                     sneaker.img = result
-                    console.log("success"+ sneaker.img)
+                    // console.log("success"+ sneaker.img)
                 })
                 .catch(function (err){
                     console.log(err)
@@ -236,7 +236,7 @@ var functions = {
                             newSneaker.img = sneakerImgFile
                             user.data.push(newSneaker)
                             user.save().then(result => {
-                                console.log(result)
+                                // console.log(result)
                                 return functions.sendBackResponse(res,true,result)
                             })
                             .catch(err => {
@@ -247,7 +247,7 @@ var functions = {
                     } else {
                         user.data.push(newSneaker)
                         user.save().then(result => {
-                            console.log(result)
+                            // console.log(result)
                             return functions.sendBackResponse(res,true,result)
                         })
                         .catch(err => {
@@ -294,7 +294,7 @@ var functions = {
             // check whether the image is not empty
             if(sneakerResult.img != null && sneakerResult.img.length){
                 let sneakerImgDir = path.dirname(sneakerResult.img.split('//').join("////"))
-                console.log(sneakerImgDir)
+                // console.log(sneakerImgDir)
                 fs.rmdir(sneakerImgDir, { recursive: true}, (err) => {
                     if(err){
                         console.log(err);
@@ -312,7 +312,7 @@ var functions = {
                                 functions.sendBackResponse(res,false,err)
                             }
                             else{
-                                console.log(result)
+                                // console.log(result)
                                 functions.sendBackResponse(res,true,result)
                             }
                         }
@@ -331,7 +331,7 @@ var functions = {
                             functions.sendBackResponse(res,false,err)
                         }
                         else{
-                            console.log(result)
+                            // console.log(result)
                             functions.sendBackResponse(res,true,result)
                         }
                     }
@@ -472,7 +472,7 @@ var functions = {
                 if(sneakerStock == null){
                     return functions.sendBackResponse(res,false,"Sneaker Not Existed!!!")
                 }
-                console.log(sneakerStock)
+                // console.log(sneakerStock)
                 let sneakerResult = sneakerStock.data[0]
                 let sneakerImgFile = sneakerResult.img
                 let image = sneaker.img
@@ -501,7 +501,7 @@ var functions = {
                                 functions.sendBackResponse(res,false,err)
                             }
                             else{
-                                console.log(result)
+                                // console.log(result)
                                 functions.sendBackResponse(res,true,result)
                             }
                         }
@@ -530,7 +530,7 @@ var functions = {
                         functions.sendBackResponse(res,false,err)
                     }
                     else{
-                        console.log(result)
+                        // console.log(result)
                         functions.sendBackResponse(res,true,result)
                     }
                 }

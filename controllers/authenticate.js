@@ -76,10 +76,10 @@ refreshToken = function(req, res){
         }
         else{
             const refreshToken = result.token
-            console.log(refreshToken)
+            // console.log(refreshToken)
             jsonwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, user) =>{
                 if(err) return res.send({success: false, msg: "Cant verify the user!!!"})
-                console.log(user);
+                // console.log(user);
                 const accessToken = generateAccessToken({name: user.name, data: user.data})
                 sendBackResponse(res,true,accessToken)
                 // console.log(accessToken);
