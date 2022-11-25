@@ -2,6 +2,14 @@ const express = require('express')
 const actions = require('../methods/actions')
 const authenticate = require('../controllers/authenticate')
 const router = express.Router()
+const morgan = require('morgan')
+
+if(process.env.NODE_ENV === 'development'){
+    router.use(morgan('dev'))
+} else {
+    router.use(morgan('common'))
+}
+
 
 // middleware
 router.use("/getdata/", authenticate.authenticateToken)
