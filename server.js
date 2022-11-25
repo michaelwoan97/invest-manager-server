@@ -1,3 +1,4 @@
+require('dotenv').config()
 const express = require('express')
 const cors = require('cors')
 const connectDB = require('./config/db')
@@ -30,7 +31,7 @@ if(!fs.existsSync(APPIMAGEDIR)){
     fs.mkdirSync(APPIMAGEDIR)
 }
 
-const PORT = 3333
+const PORT = process.env.SERVER_PORT
 
 module.exports = app.listen(PORT, () => console.log(`Server is listening on port ${PORT}`));
 
