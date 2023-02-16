@@ -19,7 +19,7 @@ describe("Automated Testing API", () => {
     
 
     const newUserTestingCredential = {
-        'name': 'pp123@gmail.com',
+        'name': 'pp125@gmail.com',
         'password': '1234',
     }
     const newUserTesting ={

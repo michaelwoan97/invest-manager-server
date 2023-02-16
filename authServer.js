@@ -31,7 +31,7 @@ app.post('/token', authenticate.refreshToken)
 //@Route DELETE /logout
 app.delete('/logout', authenticate.logOut)
 
-const PORT = process.env.PORT 
+const PORT = process.env.PORT || 4000
 
 app.listen(PORT, () => console.log(`Auth Server is listening on port ${PORT}`));
 
