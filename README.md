@@ -19,6 +19,3 @@ A backend solution for authenticating, authorizing and handling requests from <a
     npm run test
     ```
     
-## Roadmap
-- [ ] Adding features keep track of spending
-- [ ] Breaking the monolithic architecture into microservices
